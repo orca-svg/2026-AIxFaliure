@@ -1,0 +1,4 @@
+# 빌드 산출물은 CI artifact / GitHub Release로만 배포한다 (커밋하지 않음)
+dist/
+
+.DS_Store
