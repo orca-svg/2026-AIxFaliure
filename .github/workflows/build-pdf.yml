@@ -23,7 +23,9 @@ jobs:
           typst-version: "0.15.0"
 
       - name: Compile 1-page proposal PDF
-        run: typst compile proposal/proposal.typ dist/proposal.pdf
+        run: |
+          mkdir -p dist
+          typst compile proposal/proposal.typ dist/proposal.pdf
 
       - name: Enforce max 2-page limit
         run: |
