@@ -1,0 +1,401 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>언노운 나침반 — AI 리터러시 자가 진단</title>
+<style>
+  :root {
+    --surface-1: #fcfcfb;
+    --page: #f9f9f7;
+    --text-primary: #0b0b0b;
+    --text-secondary: #52514e;
+    --muted: #898781;
+    --grid: #e1e0d9;
+    --border: rgba(11,11,11,0.10);
+    --q-kk: #2a78d6;  /* 아는 것을 안다 */
+    --q-ku: #1baf7a;  /* 모른다는 걸 안다 */
+    --q-uk: #eda100;  /* 안다는 걸 모른다 */
+    --q-uu: #008300;  /* 모른다는 것도 모른다 */
+    --accent: #c81e2c;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --surface-1: #1a1a19;
+      --page: #0d0d0d;
+      --text-primary: #ffffff;
+      --text-secondary: #c3c2b7;
+      --muted: #898781;
+      --grid: #2c2c2a;
+      --border: rgba(255,255,255,0.10);
+      --q-kk: #3987e5;
+      --q-ku: #199e70;
+      --q-uk: #c98500;
+      --q-uu: #008300;
+    }
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body {
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    background: var(--page);
+    color: var(--text-primary);
+    line-height: 1.6;
+  }
+  main { max-width: 880px; margin: 0 auto; padding: 2.5rem 1.25rem 5rem; }
+  header h1 { font-size: 1.7rem; letter-spacing: -0.02em; }
+  header p.tagline { color: var(--text-secondary); margin-top: 0.35rem; }
+  header .credit { font-size: 0.8rem; color: var(--muted); margin-top: 0.5rem; }
+  header .credit a { color: inherit; }
+
+  .step {
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.4rem;
+    margin-top: 1.5rem;
+  }
+  .step h2 { font-size: 1.05rem; display: flex; align-items: center; gap: 0.55rem; }
+  .step h2 .n {
+    background: var(--accent); color: #fff;
+    width: 1.5rem; height: 1.5rem; border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 0.85rem; flex-shrink: 0;
+  }
+  .step p.help { color: var(--text-secondary); font-size: 0.88rem; margin: 0.4rem 0 0.8rem; }
+  textarea {
+    width: 100%; min-height: 7rem; resize: vertical;
+    font: inherit; font-size: 0.92rem;
+    color: var(--text-primary); background: var(--page);
+    border: 1px solid var(--grid); border-radius: 8px; padding: 0.75rem;
+  }
+  textarea:focus { outline: 2px solid var(--q-kk); outline-offset: 1px; }
+  .row { display: flex; gap: 0.6rem; margin-top: 0.8rem; flex-wrap: wrap; align-items: center; }
+  button {
+    font: inherit; font-size: 0.9rem; font-weight: 600;
+    padding: 0.55rem 1.1rem; border-radius: 8px; cursor: pointer;
+    border: 1px solid var(--border);
+    background: var(--text-primary); color: var(--page);
+  }
+  button.secondary { background: transparent; color: var(--text-primary); }
+  button:disabled { opacity: 0.4; cursor: not-allowed; }
+  .flash { font-size: 0.85rem; color: var(--q-ku); }
+
+  pre.prompt-box {
+    background: var(--page); border: 1px dashed var(--grid); border-radius: 8px;
+    padding: 0.9rem; font-size: 0.78rem; line-height: 1.5;
+    white-space: pre-wrap; word-break: break-word;
+    max-height: 16rem; overflow-y: auto; color: var(--text-secondary);
+  }
+
+  /* ── 4분면 시각화 ── */
+  .axis-note { font-size: 0.8rem; color: var(--muted); text-align: center; margin: 1rem 0 0.4rem; }
+  .matrix {
+    display: grid; grid-template-columns: auto 1fr 1fr; grid-template-rows: 1fr 1fr auto;
+    gap: 2px; margin-top: 0.4rem;
+  }
+  .ylab {
+    grid-row: span 2;
+    writing-mode: vertical-rl; transform: rotate(180deg);
+    font-size: 0.75rem; color: var(--muted);
+    display: flex; align-items: center; justify-content: center; padding: 0 0.3rem;
+  }
+  .xlab { grid-column: span 1; font-size: 0.75rem; color: var(--muted); text-align: center; padding-top: 0.35rem; }
+  .quad {
+    border-radius: 8px; padding: 0.9rem;
+    background: var(--surface-1); border: 1px solid var(--border);
+    border-top: 4px solid var(--qc);
+    min-height: 10rem;
+  }
+  .quad h3 { font-size: 0.92rem; display: flex; align-items: baseline; gap: 0.45rem; }
+  .quad h3 .count {
+    font-size: 0.78rem; font-weight: 700; color: var(--qc);
+    background: color-mix(in srgb, var(--qc) 12%, transparent);
+    padding: 0 0.5rem; border-radius: 99px;
+  }
+  .quad p.desc { font-size: 0.76rem; color: var(--muted); margin: 0.15rem 0 0.6rem; }
+  .quad .risk { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.04em; color: var(--text-secondary); }
+  ul.items { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 0.45rem; }
+  ul.items li {
+    font-size: 0.83rem; background: var(--page);
+    border: 1px solid var(--grid); border-left: 3px solid var(--qc);
+    border-radius: 6px; padding: 0.45rem 0.6rem;
+  }
+  ul.items li .pattern {
+    display: inline-block; font-size: 0.7rem; font-weight: 700;
+    color: var(--qc); margin-top: 0.15rem;
+  }
+  ul.items li .note { display: block; font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.1rem; }
+  .empty { font-size: 0.8rem; color: var(--muted); font-style: italic; }
+
+  .summary {
+    margin-top: 1.2rem; padding: 1rem 1.2rem;
+    background: var(--surface-1); border: 1px solid var(--border); border-radius: 10px;
+    font-size: 0.9rem;
+  }
+  .summary strong { color: var(--accent); }
+  .bar { display: flex; height: 14px; border-radius: 7px; overflow: hidden; margin-top: 0.6rem; gap: 2px; background: var(--page); }
+  .bar span { display: block; height: 100%; }
+  .bar-legend { display: flex; gap: 1rem; flex-wrap: wrap; font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.45rem; }
+  .bar-legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 4px; vertical-align: -1px; }
+
+  details.schema { margin-top: 0.8rem; font-size: 0.8rem; color: var(--text-secondary); }
+  details.schema pre { margin-top: 0.5rem; }
+  .error { color: #d03b3b; font-size: 0.85rem; margin-top: 0.5rem; }
+  footer { margin-top: 3rem; font-size: 0.78rem; color: var(--muted); border-top: 1px solid var(--grid); padding-top: 1rem; }
+  footer a { color: inherit; }
+  @media (max-width: 640px) {
+    .matrix { grid-template-columns: auto 1fr; grid-template-rows: repeat(4, auto) auto; }
+    .ylab { display: none; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>🧭 언노운 나침반</h1>
+    <p class="tagline">AI에게 일을 시키기 전에 — 내가 모르는 것부터 찾는 프롬프트 기반 자가 진단</p>
+    <p class="credit">
+      개념 출처: Thariq (Anthropic Claude Code 팀), <em>Fable Field Guide — Finding my Unknowns</em>
+      · 해설 영상 <a href="https://youtu.be/PNMBRgc0y2g" target="_blank" rel="noopener">youtu.be/PNMBRgc0y2g</a>
+    </p>
+  </header>
+
+  <!-- STEP 1 -->
+  <section class="step" aria-labelledby="s1h">
+    <h2 id="s1h"><span class="n">1</span> AI에게 시키려는 작업을 설명하세요</h2>
+    <p class="help">무엇을 만들려는지, 이 분야·코드베이스에 얼마나 익숙한지 솔직하게 적을수록 진단이 정확해집니다.</p>
+    <textarea id="task" placeholder="예) 우리 서비스에 소셜 로그인을 붙이려고 해. 인증은 처음이라 OAuth가 뭔지도 잘 몰라. 기존 코드베이스는 Next.js인데 auth 모듈은 한 번도 안 열어봤어."></textarea>
+  </section>
+
+  <!-- STEP 2 -->
+  <section class="step" aria-labelledby="s2h">
+    <h2 id="s2h"><span class="n">2</span> 진단 프롬프트를 복사해 쓰는 AI에게 붙여넣으세요</h2>
+    <p class="help">ChatGPT, Claude, Gemini — 어디든 좋습니다. API 키 없이, 프롬프트 자체가 도구입니다.</p>
+    <div class="row">
+      <button id="genBtn">진단 프롬프트 생성</button>
+      <button id="copyBtn" class="secondary" disabled>복사</button>
+      <span id="copyFlash" class="flash" role="status"></span>
+    </div>
+    <pre id="promptBox" class="prompt-box" hidden></pre>
+  </section>
+
+  <!-- STEP 3 -->
+  <section class="step" aria-labelledby="s3h">
+    <h2 id="s3h"><span class="n">3</span> AI의 JSON 응답을 붙여넣으면 4분면으로 시각화됩니다</h2>
+    <p class="help">AI가 돌려준 코드 블록(JSON)을 그대로 붙여넣으세요.</p>
+    <textarea id="jsonIn" placeholder='{"items":[{"quadrant":"UU","label":"...","note":"...","pattern":"블라인드스팟 패스"}]}'></textarea>
+    <div class="row">
+      <button id="vizBtn">시각화</button>
+      <button id="demoBtn" class="secondary">예시 데이터로 보기</button>
+    </div>
+    <p id="jsonErr" class="error" hidden></p>
+    <details class="schema">
+      <summary>기대하는 JSON 형식</summary>
+      <pre class="prompt-box">{
+  "items": [
+    { "quadrant": "KK | KU | UK | UU",
+      "label": "항목 한 줄",
+      "note": "왜 이 사분면인지 (선택)",
+      "pattern": "권장 패턴 이름" }
+  ]
+}</pre>
+    </details>
+  </section>
+
+  <!-- 결과 -->
+  <section id="result" hidden aria-live="polite">
+    <p class="axis-note">→ 가로: 지식 (안다 ↔ 모른다) · ↑ 세로: 인식 (인식함 ↔ 인식 못함)</p>
+    <div class="matrix">
+      <div class="ylab">인식함 · 인식 못함 ↓</div>
+
+      <div class="quad" id="q-KK" style="--qc: var(--q-kk)">
+        <h3>아는 것을 안다 <span class="count" id="c-KK">0</span></h3>
+        <p class="desc">프롬프트에 이미 적어 전달하는 것들 · 위험도 <span class="risk">낮음</span></p>
+        <ul class="items" id="l-KK"></ul>
+      </div>
+      <div class="quad" id="q-KU" style="--qc: var(--q-ku)">
+        <h3>모른다는 걸 안다 <span class="count" id="c-KU">0</span></h3>
+        <p class="desc">답은 없지만 정해야 함은 인식 · 위험도 <span class="risk">중간</span></p>
+        <ul class="items" id="l-KU"></ul>
+      </div>
+
+      <div class="quad" id="q-UK" style="--qc: var(--q-uk)">
+        <h3>안다는 걸 모른다 <span class="count" id="c-UK">0</span></h3>
+        <p class="desc">당연해서 안 적지만, 결과를 보면 "이게 아닌데" · 위험도 <span class="risk">높음</span></p>
+        <ul class="items" id="l-UK"></ul>
+      </div>
+      <div class="quad" id="q-UU" style="--qc: var(--q-uu)">
+        <h3>모른다는 것도 모른다 <span class="count" id="c-UU">0</span></h3>
+        <p class="desc">고려한 적 없는 영역, 좋고 나쁨의 기준 자체를 모름 · 위험도 <span class="risk">최고</span></p>
+        <ul class="items" id="l-UU"></ul>
+      </div>
+
+      <div></div>
+      <div class="xlab">안다</div>
+      <div class="xlab">모른다</div>
+    </div>
+
+    <div class="summary" id="summary"></div>
+  </section>
+
+  <footer>
+    <p>이 도구는 KAIST 실패연구소 <em>2026 AI×실패 아이디어 공모전</em> 제안서의 보완 자료입니다.
+    "AI 리터러시의 실체는 도구 사용법이 아니라, 내 언노운을 아는 능력"이라는 대응 방안의 프로토타입입니다.</p>
+  </footer>
+</main>
+
+<script>
+"use strict";
+const $ = (id) => document.getElementById(id);
+const QUADS = ["KK", "KU", "UK", "UU"];
+const QNAME = { KK: "아는 것을 안다", KU: "모른다는 걸 안다", UK: "안다는 걸 모른다", UU: "모른다는 것도 모른다" };
+const QCOLOR = { KK: "var(--q-kk)", KU: "var(--q-ku)", UK: "var(--q-uk)", UU: "var(--q-uu)" };
+
+function buildPrompt(task) {
+  return `너는 "언노운 발굴" 코치다. 나는 AI에게 아래 작업을 시키려고 한다.
+
+<작업>
+${task}
+</작업>
+
+Thariq(Anthropic)의 "Finding my Unknowns" 프레임에 따라, 이 작업에 숨어 있는 항목들을 네 사분면으로 분류해줘.
+
+- KK (아는 것을 안다): 내가 이미 명시했거나 명백히 알고 있는 요구사항
+- KU (모른다는 걸 안다): 내가 아직 못 정했지만 정해야 한다고 인식할 법한 결정
+- UK (안다는 걸 모른다): 나에게 너무 당연해서 안 적었을 가능성이 큰 암묵적 기대 — 결과물을 보면 "이게 아닌데" 할 것들
+- UU (모른다는 것도 모른다): 내가 고려조차 못 했을 영역 — 이 분야에서 좋고 나쁨을 가르는 기준, 흔한 함정, 내가 존재 자체를 모를 선택지
+
+규칙:
+1. UK와 UU를 가장 공들여 추측해줘. 이 작업 설명에 "빠져 있는 것"이 단서다.
+2. 각 항목에 다음 8가지 패턴 중 가장 알맞은 대응 패턴을 하나 붙여줘:
+   블라인드스팟 패스 / 브레인스토밍·프로토타입 / 인터뷰 / 레퍼런스 / 구현 계획서 / 구현 노트 / 피치 문서 / 퀴즈
+3. 사분면당 2~4개, 전체 8~14개.
+4. 답변은 아래 JSON 하나만, 코드 블록으로 출력해줘. 다른 말은 하지 마.
+
+{
+  "items": [
+    { "quadrant": "KK|KU|UK|UU", "label": "항목 한 줄", "note": "왜 이 사분면인지 한 줄", "pattern": "패턴 이름" }
+  ]
+}`;
+}
+
+$("genBtn").addEventListener("click", () => {
+  const task = $("task").value.trim();
+  if (!task) { $("task").focus(); return; }
+  const p = buildPrompt(task);
+  $("promptBox").textContent = p;
+  $("promptBox").hidden = false;
+  $("copyBtn").disabled = false;
+});
+
+$("copyBtn").addEventListener("click", async () => {
+  try {
+    await navigator.clipboard.writeText($("promptBox").textContent);
+    $("copyFlash").textContent = "복사됨 ✓";
+  } catch {
+    $("copyFlash").textContent = "복사 실패 — 직접 선택해 복사하세요";
+  }
+  setTimeout(() => { $("copyFlash").textContent = ""; }, 2500);
+});
+
+function extractJSON(text) {
+  // 코드 블록 안이든 밖이든 첫 번째 { … } 덩어리를 찾는다
+  const m = text.match(/\{[\s\S]*\}/);
+  if (!m) throw new Error("JSON 객체를 찾지 못했습니다.");
+  return JSON.parse(m[0]);
+}
+
+function render(data) {
+  if (!data || !Array.isArray(data.items)) throw new Error('"items" 배열이 없습니다.');
+  const buckets = { KK: [], KU: [], UK: [], UU: [] };
+  for (const it of data.items) {
+    const q = String(it.quadrant || "").toUpperCase();
+    if (buckets[q]) buckets[q].push(it);
+  }
+  for (const q of QUADS) {
+    const ul = $("l-" + q);
+    ul.innerHTML = "";
+    $("c-" + q).textContent = buckets[q].length;
+    if (buckets[q].length === 0) {
+      const li = document.createElement("li");
+      li.className = "empty";
+      li.style.border = "none";
+      li.textContent = "항목 없음";
+      ul.appendChild(li);
+      continue;
+    }
+    for (const it of buckets[q]) {
+      const li = document.createElement("li");
+      const label = document.createElement("strong");
+      label.textContent = it.label || "(무제)";
+      li.appendChild(label);
+      if (it.note) {
+        const note = document.createElement("span");
+        note.className = "note";
+        note.textContent = it.note;
+        li.appendChild(note);
+      }
+      if (it.pattern) {
+        const pat = document.createElement("span");
+        pat.className = "pattern";
+        pat.textContent = "→ " + it.pattern;
+        li.appendChild(pat);
+      }
+      ul.appendChild(li);
+    }
+  }
+
+  // 요약: 인식 사각지대(UK+UU) 비율 = 리터러시 경보
+  const total = QUADS.reduce((s, q) => s + buckets[q].length, 0);
+  const blind = buckets.UK.length + buckets.UU.length;
+  const pct = total ? Math.round((blind / total) * 100) : 0;
+  let verdict;
+  if (pct >= 60) verdict = "이대로 시키면 결과물을 보고 나서야 문제를 알게 될 확률이 높습니다. <strong>블라인드스팟 패스와 인터뷰부터</strong> 시작하세요.";
+  else if (pct >= 30) verdict = "구현 전에 <strong>브레인스토밍·프로토타입</strong>으로 아래쪽 사분면을 위로 끌어올리세요.";
+  else verdict = "언노운이 잘 관리되고 있습니다. <strong>구현 계획서</strong>를 받고 시작해도 좋습니다.";
+  const seg = QUADS.map(q =>
+    `<span style="background:${QCOLOR[q]};width:${total ? (buckets[q].length / total) * 100 : 0}%"
+       title="${QNAME[q]} ${buckets[q].length}"></span>`).join("");
+  const legend = QUADS.map(q =>
+    `<span><i style="background:${QCOLOR[q]}"></i>${QNAME[q]} ${buckets[q].length}</span>`).join("");
+  $("summary").innerHTML =
+    `<p>전체 ${total}개 중 <strong>${blind}개(${pct}%)</strong>가 인식 사각지대(아래쪽 두 사분면)에 있습니다. ${verdict}</p>
+     <div class="bar" role="img" aria-label="사분면별 분포">${seg}</div>
+     <div class="bar-legend">${legend}</div>`;
+
+  $("result").hidden = false;
+  $("result").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+$("vizBtn").addEventListener("click", () => {
+  $("jsonErr").hidden = true;
+  try {
+    render(extractJSON($("jsonIn").value));
+  } catch (e) {
+    $("jsonErr").textContent = "해석 실패: " + e.message;
+    $("jsonErr").hidden = false;
+  }
+});
+
+$("demoBtn").addEventListener("click", () => {
+  const demo = {
+    items: [
+      { quadrant: "KK", label: "Next.js에 소셜 로그인 추가", note: "명시된 목표", pattern: "구현 계획서" },
+      { quadrant: "KK", label: "기존 코드베이스는 Next.js", note: "명시된 제약", pattern: "레퍼런스" },
+      { quadrant: "KU", label: "어떤 소셜 제공자를 지원할지", note: "정해야 함을 본인도 인식", pattern: "인터뷰" },
+      { quadrant: "KU", label: "세션 유지 방식(JWT vs 세션)", note: "미결정이라고 언급", pattern: "인터뷰" },
+      { quadrant: "UK", label: "기존 회원과 소셜 계정의 병합 규칙", note: "당연히 합쳐진다고 가정했을 것", pattern: "브레인스토밍·프로토타입" },
+      { quadrant: "UK", label: "로그인 실패/거부 시 UX", note: "성공 경로만 상상했을 가능성", pattern: "브레인스토밍·프로토타입" },
+      { quadrant: "UU", label: "OAuth 리다이렉트 URI 검증·CSRF 등 보안 함정", note: "인증 초심자가 존재를 모르는 영역", pattern: "블라인드스팟 패스" },
+      { quadrant: "UU", label: "제공자별 이메일 미제공 케이스", note: "좋은 구현의 기준 자체를 모름", pattern: "블라인드스팟 패스" }
+    ]
+  };
+  $("jsonIn").value = JSON.stringify(demo, null, 2);
+  render(demo);
+});
+
+// #demo 해시로 열면 예시 시각화를 바로 보여준다 (README 데모 링크용)
+if (location.hash === "#demo") $("demoBtn").click();
+</script>
+</body>
+</html>
