@@ -3,7 +3,7 @@
 #show: doc => conf(
   title: "제목 TODO",
   subtitle: "부제 / 한 줄 카피 TODO",
-  team: "팀명 TODO · 이준엽 · 팀원2",
+  team: "팀 리볼빙 · 이준엽 · 조기원",
   doc,
 )
 
