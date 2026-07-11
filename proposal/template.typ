@@ -19,7 +19,7 @@
       #team #h(1fr) #counter(page).display()
     ],
   )
-  // CI(Ubuntu)에는 apt로 fonts-nanum을 설치해 이 폰트를 그대로 사용한다.
+  // 한글 본문 폰트. 로컬에 NanumGothic(나눔고딕)이 설치돼 있어야 컴파일된다.
   set text(font: "NanumGothic", size: 9.5pt, lang: "ko")
   set par(justify: true, leading: 0.55em)
   set heading(numbering: none)

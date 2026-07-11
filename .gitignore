@@ -1,4 +1,4 @@
-# 빌드 산출물은 CI artifact / GitHub Release로만 배포한다 (커밋하지 않음)
+# 빌드 산출물(로컬 typst compile 결과)은 커밋하지 않는다 — 확정본은 GitHub Release로 배포
 dist/
 
 .DS_Store
