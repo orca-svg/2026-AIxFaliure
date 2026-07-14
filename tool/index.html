@@ -1,0 +1,892 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Unknown Compass — AI 리터러시 자가 진단</title>
+<meta name="color-scheme" content="light dark">
+<script>
+  /* FOUC 방지: 저장된 테마(또는 ?theme=)를 첫 페인트 전에 적용 */
+  (function () {
+    const t = new URLSearchParams(location.search).get("theme") || localStorage.getItem("uc_theme");
+    if (t === "light" || t === "dark") document.documentElement.dataset.theme = t;
+  })();
+</script>
+<style>
+  /* 사분면 팔레트는 라이트/다크 각각 CVD 분리도·명도 대비 검증을 통과한 값 — 임의 변경 금지 */
+  :root {
+    color-scheme: light;
+    --page: #fffdf4; --surface-1: #ffffff;
+    --text-primary: #000; --text-secondary: #333; --muted: #555;
+    --line: #000; --shadow: #000;
+    --q-kk: #2a78d6; --q-ku: #1baf7a; --q-uk: #eda100; --q-uu: #5b21b6;
+    --accent: #c81e2c; --accent-fg: #fff; --ok: #008300; --warn: #c81e2c;
+  }
+  /* 다크: Material 다크 테마 원칙을 따름 — 순검정 대신 어두운 웜 그레이 배경,
+     고도는 밝은 서피스로 표현(그림자는 보조), 순백 대신 오프화이트 텍스트,
+     보더는 진동하지 않게 중간 회색, 액센트는 밝고 탈채도된 톤 */
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --page: #1d1b18; --surface-1: #262420;
+    --text-primary: #e8e4d8; --text-secondary: #bdb8a9; --muted: #98917e;
+    --line: #57534a; --shadow: #000;
+    --q-kk: #4d90e8; --q-ku: #149c6c; --q-uk: #bd8600; --q-uu: #8b5cf6;
+    --accent: #f28b82; --accent-fg: #1d1b18; --ok: #81c995; --warn: #f28b82;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --page: #1d1b18; --surface-1: #262420;
+      --text-primary: #e8e4d8; --text-secondary: #bdb8a9; --muted: #98917e;
+      --line: #57534a; --shadow: #000;
+      --q-kk: #4d90e8; --q-ku: #149c6c; --q-uk: #bd8600; --q-uu: #8b5cf6;
+      --accent: #f28b82; --accent-fg: #1d1b18; --ok: #81c995; --warn: #f28b82;
+    }
+  }
+  * { box-sizing: border-box; margin: 0; }
+  html { scroll-padding-bottom: 8rem; }
+  body {
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    background: var(--page); color: var(--text-primary); line-height: 1.6;
+    padding-bottom: 8rem;
+  }
+  main { max-width: 1020px; margin: 0 auto; padding: 0 1.25rem; }
+
+  /* ── 헤더: 좌측 브랜드+크레딧 / 우측 API 설정 드롭다운 ── */
+  header {
+    border-bottom: 3px solid var(--line); background: var(--page);
+    padding: 0.6rem 1.25rem;
+    display: flex; flex-wrap: wrap; align-items: flex-start; gap: 0.4rem 1rem;
+  }
+  .brand { flex: 1 1 24rem; min-width: 0; }
+  .brand h1 { font-size: 1.2rem; font-weight: 900; letter-spacing: -0.01em; display: inline; margin-right: 0.6rem; }
+  .brand .tagline { color: var(--text-secondary); font-size: 0.78rem; display: inline; }
+  .brand .credit { font-size: 0.67rem; color: var(--muted); margin-top: 0.15rem; max-width: 52rem; line-height: 1.5; }
+  .brand .credit a { color: inherit; }
+  header .cfg { position: relative; display: flex; gap: 0.5rem; align-items: center; margin-left: auto; margin-top: 0.15rem; }
+  header .cfg .model-chip {
+    font-size: 0.72rem; font-weight: 700; color: var(--text-secondary);
+    background: var(--surface-1); border: 1.5px solid var(--line); padding: 0.12rem 0.55rem;
+  }
+  #keyState { font-size: 0.76rem; font-weight: 800; }
+  #keyState.on { color: var(--ok); }
+  #keyState.off { color: var(--warn); }
+
+  button {
+    font: inherit; font-size: 0.86rem; font-weight: 800;
+    padding: 0.45rem 0.95rem; border-radius: 0; cursor: pointer;
+    border: 2px solid var(--line); background: var(--accent); color: var(--accent-fg);
+    box-shadow: 3px 3px 0 var(--shadow);
+  }
+  button:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--shadow); }
+  button.secondary { background: var(--surface-1); color: var(--text-primary); }
+  button.small { font-size: 0.76rem; padding: 0.28rem 0.65rem; box-shadow: 2px 2px 0 var(--shadow); }
+  button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* ── API 설정: 버튼 아래로 펼쳐지는 드롭다운 배너 ── */
+  #settings {
+    position: absolute; top: calc(100% + 0.55rem); right: 0; z-index: 40;
+    width: min(30rem, 94vw);
+    background: var(--surface-1); border: 2px solid var(--line); box-shadow: 6px 6px 0 var(--shadow);
+    padding: 0.85rem 1rem; text-align: left;
+    display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: end;
+  }
+  #settings[hidden] { display: none; }
+  #settings label { font-size: 0.72rem; color: var(--text-secondary); display: block; font-weight: 700; }
+  #settings input {
+    font: inherit; font-size: 0.85rem; color: var(--text-primary);
+    background: var(--page); border: 2px solid var(--line); padding: 0.35rem 0.55rem; min-width: 14rem;
+  }
+  #settings select {
+    font: inherit; font-size: 0.85rem; color: var(--text-primary);
+    background: var(--page); border: 2px solid var(--line); padding: 0.35rem 0.55rem;
+    min-width: 14rem; max-width: 19rem;
+  }
+  #settings .hint { font-size: 0.7rem; color: var(--muted); width: 100%; }
+
+  /* ── 빈 상태 가이드 ── */
+  .empty-guide { text-align: center; margin-top: 1.1rem; }
+  .empty-guide h2 { font-size: 1.4rem; font-weight: 900; }
+  .empty-guide p { color: var(--text-secondary); font-size: 0.86rem; margin-top: 0.1rem; }
+  .empty-guide .chips { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin-top: 0.7rem; }
+  body[data-state="done"] .empty-guide { display: none; }
+
+  /* ── 4분면 보드: 축 트랙 없이 전폭 2×2 — 상하 컴포넌트와 정렬 ── */
+  #board { margin-top: 0.9rem; }
+  .matrix-wrap { position: relative; }
+  .matrix { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 5px; }
+  .axis-note { font-size: 0.72rem; color: var(--muted); text-align: center; margin-top: 0.4rem; }
+
+  .quad {
+    border: 2px solid var(--line); border-top: 6px solid var(--qc);
+    background: var(--surface-1); padding: 0.7rem 0.75rem; min-height: 7rem;
+    display: flex; flex-direction: column; position: relative;
+  }
+  .quad h3 { font-size: 0.86rem; display: flex; align-items: baseline; gap: 0.4rem; }
+  .quad h3 .count {
+    font-size: 0.72rem; font-weight: 800; color: var(--qc);
+    background: color-mix(in srgb, var(--qc) 12%, transparent);
+    padding: 0 0.45rem; border: 1.5px solid var(--qc);
+  }
+  .quad p.desc { font-size: 0.7rem; color: var(--muted); margin: 0.05rem 0 0.45rem; }
+  .quad .risk { font-weight: 800; color: var(--text-secondary); }
+  ul.items {
+    list-style: none; padding: 0; display: flex; flex-direction: column; gap: 0.35rem;
+    max-height: 12rem; overflow-y: auto;
+  }
+  ul.items li {
+    font-size: 0.78rem; background: var(--page);
+    border: 1.5px solid var(--line); border-left: 4px solid var(--qc);
+    padding: 0.35rem 0.5rem;
+  }
+  ul.items li .pattern { display: inline-block; font-size: 0.66rem; font-weight: 800; color: var(--qc); margin-top: 0.05rem; }
+  ul.items li .note { display: block; font-size: 0.7rem; color: var(--text-secondary); }
+  .empty { font-size: 0.74rem; color: var(--muted); font-style: italic; border: none !important; background: transparent !important; padding-left: 0 !important; }
+
+  .summary {
+    margin: 0.8rem 0 0; padding: 0.75rem 0.95rem;
+    background: var(--surface-1); border: 2px solid var(--line); box-shadow: 4px 4px 0 var(--shadow);
+    font-size: 0.84rem;
+  }
+  .summary strong { color: var(--accent); }
+  .bar { display: flex; height: 13px; overflow: hidden; margin-top: 0.5rem; gap: 2px; background: var(--surface-1); border: 1.5px solid var(--line); }
+  .bar span { display: block; height: 100%; }
+  .bar-legend { display: flex; gap: 0.85rem; flex-wrap: wrap; font-size: 0.7rem; color: var(--text-secondary); margin-top: 0.35rem; }
+  .bar-legend i { display: inline-block; width: 10px; height: 10px; margin-right: 4px; vertical-align: -1px; border: 1px solid var(--line); }
+
+  /* ── 하단 고정 입력 바 ── */
+  #dock {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 20;
+    background: var(--page); border-top: 3px solid var(--line);
+    padding: 0.45rem 1.25rem 0.5rem;
+  }
+  .dock-inner { max-width: 960px; margin: 0 auto; }
+  #status { font-size: 0.78rem; margin-bottom: 0.3rem; font-weight: 600; }
+  #status.busy { color: var(--text-secondary); }
+  #status.warn { color: var(--warn); }
+  #status.ok { color: var(--ok); }
+  #status .spin { display: inline-block; animation: spin 1s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .dock-row { display: flex; gap: 0.5rem; align-items: flex-end; }
+  #task {
+    flex: 1 1 auto; resize: none; overflow-y: auto;
+    font: inherit; font-size: 0.9rem; line-height: 1.45;
+    color: var(--text-primary); background: var(--surface-1);
+    border: 2px solid var(--line); padding: 0.5rem 0.7rem;
+    min-height: 2.55rem; max-height: 8.5rem;
+  }
+  #task:focus { outline: 3px solid var(--q-kk); outline-offset: 1px; }
+  .dock-tip { font-size: 0.64rem; color: var(--muted); margin-top: 0.22rem; }
+  .dock-tip a { color: inherit; font-weight: 700; }
+
+  /* ── 수동 모드 공용 컨트롤 ── */
+  .manual-ui { display: flex; flex-direction: column; gap: 0.7rem; text-align: left; }
+  .manual-ui p.help { color: var(--text-secondary); font-size: 0.8rem; }
+  .manual-ui textarea {
+    width: 100%; min-height: 5.5rem; resize: vertical;
+    font: inherit; font-size: 0.84rem; color: var(--text-primary);
+    background: var(--surface-1); border: 2px solid var(--line); padding: 0.6rem;
+  }
+  pre.prompt-box {
+    background: var(--page); border: 1.5px dashed var(--line);
+    padding: 0.8rem; font-size: 0.72rem; line-height: 1.5;
+    white-space: pre-wrap; word-break: break-word;
+    max-height: 11rem; overflow-y: auto; color: var(--text-secondary);
+  }
+  .mrow { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; }
+  .flash { font-size: 0.8rem; color: var(--q-ku); }
+  .error { color: var(--warn); font-size: 0.82rem; }
+  details.schema > summary { font-size: 0.75rem; color: var(--muted); cursor: pointer; }
+
+  @media (max-width: 640px) {
+    .quad { padding: 0.5rem; min-height: 5.5rem; }
+    header .cfg { margin-left: 0; }
+    .axtag { display: none; }
+  }
+
+  /* ── 변형별 ── */
+  .board-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 1rem; margin-bottom: 0.45rem; }
+  .board-head .axis-note { margin: 0; text-align: left; flex: 1; }
+  .minimap { display: grid; grid-template-columns: auto auto; grid-template-areas: ". top" "side grid"; gap: 3px;
+    font-size: 0.56rem; font-weight: 800; color: var(--muted); flex: 0 0 auto; }
+  .minimap .mm-top { grid-area: top; display: grid; grid-template-columns: 1fr 1fr; text-align: center; gap: 2px; }
+  .minimap .mm-side { grid-area: side; display: grid; grid-template-rows: 1fr 1fr; align-items: center; text-align: right; gap: 2px; }
+  .minimap .mm-grid { grid-area: grid; display: grid; grid-template-columns: 15px 15px; gap: 2px; }
+  .minimap .mm-grid i { width: 15px; height: 15px; border: 1.5px solid var(--line); display: block; }
+  details.inline { margin-top: 0.7rem; }
+  details.inline > summary { cursor: pointer; font-size: 0.78rem; font-weight: 700; color: var(--muted);
+    text-decoration: underline; text-underline-offset: 3px; width: fit-content; }
+  details.inline .inner { margin-top: 0.6rem; border: 2px solid var(--line); background: var(--surface-1); box-shadow: 4px 4px 0 var(--shadow); padding: 0.8rem 0.9rem; }
+
+  /* ── 진단 기록 패널 (타임라인) — 쓸수록 쌓이는 언노운 추이 ── */
+  .lg-count { font-size: 0.72rem; font-weight: 800; color: var(--text-secondary); border: 1.5px solid var(--line); padding: 0 0.4rem; background: var(--page); text-decoration: none; margin-left: 0.3rem; }
+  .lg-help { font-size: 0.76rem; color: var(--text-secondary); margin-bottom: 0.6rem; }
+  .lg-toolbar { margin-bottom: 0.75rem; }
+  /* 삭제 확인 배너 (브라우저 confirm 대신 — 다이얼로그 차단 회피) */
+  .lg-confirm {
+    display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;
+    background: color-mix(in srgb, var(--warn) 12%, var(--surface-1));
+    border: 2px solid var(--warn); box-shadow: 4px 4px 0 var(--shadow);
+    padding: 0.6rem 0.8rem; margin-bottom: 0.75rem;
+  }
+  .lg-confirm[hidden] { display: none; }
+  .lg-confirm-msg { font-size: 0.8rem; font-weight: 700; color: var(--text-primary); flex: 1 1 16rem; }
+  .lg-confirm .warn-btn { background: var(--warn); color: var(--accent-fg); }
+  .lg-dist { display: flex; height: 12px; gap: 2px; border: 1.5px solid var(--line); background: var(--surface-1); min-width: 150px; }
+  .lg-dist span { display: block; height: 100%; }
+  .lg-pct { font-weight: 900; font-variant-numeric: tabular-nums; }
+  .lg-pct.hi { color: var(--warn); } .lg-pct.mid { color: var(--q-uk); } .lg-pct.lo { color: var(--ok); }
+  .lg-ts { font-size: 0.72rem; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .lg-task { font-size: 0.82rem; font-weight: 700; }
+  .lg-delta { font-size: 0.72rem; font-weight: 800; font-variant-numeric: tabular-nums; margin-left: 0.45rem; }
+  .lg-delta.down { color: var(--ok); } .lg-delta.up { color: var(--warn); } .lg-delta.flat, .lg-delta.base { color: var(--muted); }
+  .lg-tl { position: relative; padding-left: 1.4rem; }
+  .lg-tl::before { content: ""; position: absolute; left: 5px; top: 4px; bottom: 4px; width: 2px; background: var(--line); }
+  .lg-row { position: relative; padding: 0 0 1rem; display: flex; gap: 1rem; align-items: flex-start; }
+  .lg-row:last-child { padding-bottom: 0; }
+  .lg-row .lg-node { position: absolute; left: -1.4rem; top: 4px; width: 12px; height: 12px; border: 2px solid var(--line); background: var(--qc); border-radius: 50%; }
+  .lg-row .lg-main { flex: 1; min-width: 0; }
+  .lg-row .lg-side { flex: 0 0 auto; display: flex; flex-direction: column; align-items: flex-end; gap: 0.4rem; text-align: right; }
+  .lg-row .lg-pctline { display: flex; align-items: baseline; }
+  @media (max-width: 560px) {
+    .lg-row { flex-direction: column; gap: 0.35rem; }
+    .lg-row .lg-side { align-items: flex-start; text-align: left; }
+    .lg-dist { min-width: 120px; }
+  }
+</style>
+</head>
+<body data-state="empty">
+<header>
+  <div class="brand">
+    <div><h1>🧭 Unknown Compass</h1><span class="tagline">AI에게 일을 시키기 전에 — 내가 모르는 것부터 찾는 자가 진단</span></div>
+    <p class="credit">KAIST 실패연구소 <em>2026 AI×실패 아이디어 공모전</em> 제안서의 보완 자료 — "AI 리터러시의 실체는 도구 사용법이 아니라, 내 언노운을 아는 능력"이라는 대응 방안의 프로토타입.
+    개념 출처: Thariq (Anthropic Claude Code 팀), <em>A Field Guide to Fable: Finding Your Unknowns</em> · <a href="https://x.com/trq212/status/2073100352921215386" target="_blank" rel="noopener">원문 글 (X)</a></p>
+  </div>
+  <div class="cfg">
+    <button class="secondary small" id="themeBtn" title="테마 전환 — 자동(시스템)/라이트/다크">◐ 자동</button>
+    <span class="model-chip" id="modelChip"></span>
+    <span id="keyState" class="off">키 없음</span>
+
+    <button class="secondary small" id="cfgBtn" aria-expanded="false" aria-controls="settings">⚙ API 설정</button>
+
+    <!-- API 설정: 버튼 아래로 펼쳐지는 드롭다운 -->
+    <section id="settings" hidden aria-label="API 설정">
+      <div>
+        <label for="keyIn">OpenRouter API 키 (이 브라우저 localStorage에만 저장)</label>
+        <input id="keyIn" type="password" placeholder="sk-or-v1-…" autocomplete="off">
+      </div>
+      <div>
+        <label for="modelIn">모델 (OpenRouter 목록 자동 로드)</label>
+        <select id="modelIn">
+          <option value="z-ai/glm-4.6">z-ai/glm-4.6 (기본)</option>
+          <option value="z-ai/glm-4.5-air">z-ai/glm-4.5-air</option>
+          <option value="deepseek/deepseek-chat-v3.1">deepseek/deepseek-chat-v3.1</option>
+        </select>
+      </div>
+      <button id="saveCfg" class="small">저장</button>
+      <button id="clearKey" class="secondary small">키 삭제</button>
+      <p class="hint">키는 저장소·서버로 전송되지 않습니다. 진단용 필터 LLM이므로 저비용 모델로 충분합니다.</p>
+
+    </section>
+
+  </div>
+</header>
+
+<main>
+  <!-- 빈 상태: 중앙 안내 + 예시 칩 -->
+  <div class="empty-guide" id="emptyGuide">
+    <h2>무엇을 AI에게 시키려고 하나요?</h2>
+    <p>아래 입력창에 평소처럼 작업을 설명하면, 당신의 언노운을 네 사분면으로 진단합니다.</p>
+    <div class="chips">
+      <button class="chip secondary small" data-fill="우리 서비스에 소셜 로그인을 붙이려고 해. 인증은 처음이라 OAuth가 뭔지도 잘 몰라. 기존 코드베이스는 Next.js인데 auth 모듈은 한 번도 안 열어봤어.">🔐 소셜 로그인 붙이기</button>
+      <button class="chip secondary small" data-fill="유튜브 영상을 요약해주는 크롬 확장프로그램을 졸업작품으로 만들려고 해. 자바스크립트는 좀 하는데 확장프로그램 개발은 처음이야.">🧩 크롬 확장 만들기</button>
+      <button class="chip secondary small" data-fill="공모전 제안서 초안을 AI에게 맡기려고 해. 주제는 정했는데 심사 기준표는 아직 제대로 안 읽어봤어.">📄 제안서 초안 맡기기</button>
+      <button class="chip small" data-demo>▶ 예시 결과 미리보기</button>
+    </div>
+  </div>
+
+  <!-- 4분면 나침반 (전폭 2×2 — 상하 컴포넌트와 정렬) -->
+  <section id="board" aria-label="4분면 나침반">
+    <div class="board-head">
+      <p class="axis-note">가로축: 그 지식을 안다/모른다 · 세로축: 그 사실을 스스로 인식하는가 — 인식 못함(아래 행)이 사각지대</p>
+      <div class="minimap" aria-hidden="true">
+        <span class="mm-top"><b>안다</b><b>모른다</b></span>
+        <span class="mm-side"><b>인식함</b><b>인식 못함</b></span>
+        <span class="mm-grid"><i style="background:var(--q-kk)"></i><i style="background:var(--q-ku)"></i><i style="background:var(--q-uk)"></i><i style="background:var(--q-uu)"></i></span>
+      </div>
+    </div>
+    <div class="matrix-wrap">
+
+      <div class="matrix">
+        <div class="quad" id="q-KK" style="--qc: var(--q-kk)">
+          <h3>아는 것을 안다 <span class="count" id="c-KK">0</span></h3>
+          <p class="desc">프롬프트에 이미 적어 전달하는 것들 · 위험도 <span class="risk">낮음</span></p>
+          <ul class="items" id="l-KK"><li class="empty">진단 전</li></ul>
+        </div>
+        <div class="quad" id="q-KU" style="--qc: var(--q-ku)">
+          <h3>모른다는 걸 안다 <span class="count" id="c-KU">0</span></h3>
+          <p class="desc">답은 없지만 정해야 함은 인식 · 위험도 <span class="risk">중간</span></p>
+          <ul class="items" id="l-KU"><li class="empty">진단 전</li></ul>
+        </div>
+        <div class="quad" id="q-UK" style="--qc: var(--q-uk)">
+          <h3>안다는 걸 모른다 <span class="count" id="c-UK">0</span></h3>
+          <p class="desc">당연해서 안 적지만, 결과를 보면 “이게 아닌데” · 위험도 <span class="risk">높음</span></p>
+          <ul class="items" id="l-UK"><li class="empty">진단 전</li></ul>
+        </div>
+        <div class="quad" id="q-UU" style="--qc: var(--q-uu)">
+          <h3>모른다는 것도 모른다 <span class="count" id="c-UU">0</span></h3>
+          <p class="desc">고려한 적 없는 영역, 기준 자체를 모름 · 위험도 <span class="risk">최고</span></p>
+          <ul class="items" id="l-UU"><li class="empty">진단 전</li></ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="summary" id="summary" hidden></div>
+    <details class="inline" id="manualBox">
+      <summary>API 키 없이 쓰기 — 수동 모드 (프롬프트 복사 → JSON 붙여넣기)</summary>
+      <div class="inner">
+
+      <div class="manual-ui">
+        <p class="help">하단 입력창에 작업을 적고 <strong>진단 프롬프트 생성</strong> → 복사해 ChatGPT·Claude·Gemini 어디든 붙여넣기 → AI가 돌려준 JSON을 아래에 붙여넣으면 나침반이 갱신됩니다. 프롬프트 자체가 도구라, 진단 로직 전체를 사람이 읽고 배울 수 있습니다.</p>
+        <div class="mrow">
+          <button id="genBtn" class="secondary small">진단 프롬프트 생성</button>
+          <button id="copyBtn" class="secondary small" disabled>복사</button>
+          <span id="copyFlash" class="flash" role="status"></span>
+        </div>
+        <pre id="promptBox" class="prompt-box" hidden></pre>
+        <textarea id="jsonIn" placeholder='AI의 JSON 응답 붙여넣기 — {"items":[{"quadrant":"UU","label":"...","note":"...","pattern":"블라인드스팟 패스"}]}'></textarea>
+        <div class="mrow">
+          <button id="vizBtn" class="secondary small">시각화</button>
+          <span id="jsonErr" class="error" hidden></span>
+        </div>
+      </div>
+
+      <details class="schema">
+        <summary>기대하는 JSON 형식</summary>
+        <pre class="prompt-box">{
+  "items": [
+    { "quadrant": "KK | KU | UK | UU",
+      "label": "항목 한 줄",
+      "note": "왜 이 사분면인지 (선택)",
+      "pattern": "권장 패턴 이름" }
+  ]
+}</pre>
+      </details>
+      </div>
+    </details>
+
+    <!-- 진단 기록: 진단할 때마다 이 브라우저에만 누적 저장 → 사각지대 추이 -->
+    <details class="inline" id="logBox">
+      <summary>📋 내 진단 기록 <span class="lg-count" id="logCount">0건</span> — 쓸수록 쌓이는 내 언노운 추이</summary>
+      <div class="inner">
+        <p class="lg-help">진단할 때마다 이 브라우저에만 자동 저장됩니다(서버 전송 없음). 같은 작업을 고쳐 다시 진단하면 인식 사각지대(UK+UU) 비율이 어떻게 변하는지 최신순으로 추적됩니다 — <strong>AI를 쓰는 행위 자체가 메타인지 훈련의 기록</strong>이 되는, 대응 방안(AI 리터러시)의 실증부입니다.</p>
+        <div class="mrow lg-toolbar">
+          <button id="logJson" class="secondary small" disabled>JSON 내보내기</button>
+          <button id="logCsv" class="secondary small" disabled>CSV 내보내기</button>
+          <button id="logClear" class="secondary small" disabled>전체 삭제</button>
+          <span style="flex:1"></span>
+          <button id="logDemo" class="secondary small">▶ 데모 로그 채우기</button>
+        </div>
+        <div id="logClearBanner" class="lg-confirm" hidden role="alertdialog" aria-label="진단 기록 삭제 확인">
+          <span class="lg-confirm-msg">정말 삭제하시겠습니까? 이 브라우저에 저장된 진단 기록 전체가 지워지며 되돌릴 수 없습니다.</span>
+          <span style="flex:1"></span>
+          <button id="logClearYes" class="small warn-btn">삭제</button>
+          <button id="logClearNo" class="secondary small">취소</button>
+        </div>
+        <p id="logEmpty" class="empty">아직 기록이 없습니다. 작업을 진단하거나 [▶ 데모 로그 채우기]로 예시 추이를 확인하세요.</p>
+        <div class="lg-tl" id="logTl" hidden></div>
+      </div>
+    </details>
+  </section>
+</main>
+
+
+
+<!-- 하단 고정 입력 바 -->
+<div id="dock">
+  <div class="dock-inner">
+
+    <p id="status" hidden></p>
+    <div class="dock-row">
+      <textarea id="task" rows="1" placeholder="평소처럼, AI에게 시키려는 작업을 설명하세요… (진단 후 이 글을 고쳐 다시 보내면 재진단)"></textarea>
+      <button id="sendBtn">진단 →</button>
+    </div>
+    <p class="dock-tip">Enter 전송 · Shift+Enter 줄바꿈 · 대화는 누적되지 않습니다 — 보낼 때마다 새로 진단하고 나침반을 다시 그립니다</p>
+  </div>
+</div>
+
+<script>
+"use strict";
+const $ = (id) => document.getElementById(id);
+const QUADS = ["KK", "KU", "UK", "UU"];
+const QNAME = { KK: "아는 것을 안다", KU: "모른다는 걸 안다", UK: "안다는 걸 모른다", UU: "모른다는 것도 모른다" };
+const QCOLOR = { KK: "var(--q-kk)", KU: "var(--q-ku)", UK: "var(--q-uk)", UU: "var(--q-uu)" };
+const LS_KEY = "uc_or_key", LS_MODEL = "uc_model";
+const DEFAULT_MODEL = "z-ai/glm-4.6";
+
+function buildPrompt(task) {
+  return `너는 "언노운 발굴" 코치다. 나는 AI에게 아래 작업을 시키려고 한다.
+
+<작업>
+${task}
+</작업>
+
+Thariq(Anthropic)의 "A Field Guide to Fable: Finding Your Unknowns" 프레임에 따라, 이 작업에 숨어 있는 항목들을 네 사분면으로 분류해줘.
+
+- KK (아는 것을 안다): 내가 이미 명시했거나 명백히 알고 있는 요구사항
+- KU (모른다는 걸 안다): 내가 아직 못 정했지만 정해야 한다고 인식할 법한 결정
+- UK (안다는 걸 모른다): 나에게 너무 당연해서 안 적었을 가능성이 큰 암묵적 기대 — 결과물을 보면 "이게 아닌데" 할 것들
+- UU (모른다는 것도 모른다): 내가 고려조차 못 했을 영역 — 이 분야에서 좋고 나쁨을 가르는 기준, 흔한 함정, 내가 존재 자체를 모를 선택지
+
+규칙:
+1. UK와 UU를 가장 공들여 추측해줘. 이 작업 설명에 "빠져 있는 것"이 단서다.
+2. 각 항목에 다음 8가지 패턴 중 가장 알맞은 대응 패턴을 하나 붙여줘:
+   블라인드스팟 패스 / 브레인스토밍·프로토타입 / AI 역질문 / 레퍼런스 / 구현 계획서 / 구현 노트 / 피치 문서 / 퀴즈
+3. 사분면당 2~4개, 전체 8~14개.
+4. 답변은 아래 JSON 하나만, 코드 블록으로 출력해줘. 다른 말은 하지 마.
+
+{
+  "items": [
+    { "quadrant": "KK|KU|UK|UU", "label": "항목 한 줄", "note": "왜 이 사분면인지 한 줄", "pattern": "패턴 이름" }
+  ]
+}`;
+}
+
+function extractJSON(text) {
+  const m = text.match(/\{[\s\S]*\}/);
+  if (!m) throw new Error("JSON 객체를 찾지 못했습니다.");
+  return JSON.parse(m[0]);
+}
+
+function render(data) {
+  if (!data || !Array.isArray(data.items)) throw new Error('"items" 배열이 없습니다.');
+  const buckets = { KK: [], KU: [], UK: [], UU: [] };
+  for (const it of data.items) {
+    const q = String(it.quadrant || "").toUpperCase();
+    if (buckets[q]) buckets[q].push(it);
+  }
+  for (const q of QUADS) {
+    const ul = $("l-" + q);
+    ul.innerHTML = "";
+    $("c-" + q).textContent = buckets[q].length;
+    if (buckets[q].length === 0) {
+      const li = document.createElement("li");
+      li.className = "empty";
+      li.textContent = "항목 없음";
+      ul.appendChild(li);
+      continue;
+    }
+    for (const it of buckets[q]) {
+      const li = document.createElement("li");
+      const label = document.createElement("strong");
+      label.textContent = it.label || "(무제)";
+      li.appendChild(label);
+      if (it.note) {
+        const note = document.createElement("span");
+        note.className = "note";
+        note.textContent = it.note;
+        li.appendChild(note);
+      }
+      if (it.pattern) {
+        const pat = document.createElement("span");
+        pat.className = "pattern";
+        pat.textContent = "→ " + it.pattern;
+        li.appendChild(pat);
+      }
+      ul.appendChild(li);
+    }
+  }
+  const total = QUADS.reduce((s, q) => s + buckets[q].length, 0);
+  const blind = buckets.UK.length + buckets.UU.length;
+  const pct = total ? Math.round((blind / total) * 100) : 0;
+  let verdict;
+  if (pct >= 60) verdict = "이대로 시키면 결과물을 보고 나서야 문제를 알게 될 확률이 높습니다. <strong>블라인드스팟 패스와 AI 역질문부터</strong> 시작하세요.";
+  else if (pct >= 30) verdict = "구현 전에 <strong>브레인스토밍·프로토타입</strong>으로 인식 못함 두 칸을 위로 끌어올리세요.";
+  else verdict = "언노운이 잘 관리되고 있습니다. <strong>구현 계획서</strong>를 받고 시작해도 좋습니다.";
+  const seg = QUADS.map(q =>
+    `<span style="background:${QCOLOR[q]};width:${total ? (buckets[q].length / total) * 100 : 0}%"
+       title="${QNAME[q]} ${buckets[q].length}"></span>`).join("");
+  const legend = QUADS.map(q =>
+    `<span><i style="background:${QCOLOR[q]}"></i>${QNAME[q]} ${buckets[q].length}</span>`).join("");
+  $("summary").innerHTML =
+    `<p>전체 ${total}개 중 <strong>${blind}개(${pct}%)</strong>가 인식 사각지대(인식 못함 두 칸)에 있습니다. ${verdict}</p>
+     <div class="bar" role="img" aria-label="사분면별 분포">${seg}</div>
+     <div class="bar-legend">${legend}</div>`;
+  $("summary").hidden = false;
+  document.body.dataset.state = "done";
+  const counts = {};
+  for (const q of QUADS) counts[q] = buckets[q].length;
+  return { total, blind, pct, counts };
+}
+
+function setStatus(cls, html) {
+  const s = $("status");
+  s.className = cls;
+  s.innerHTML = html;
+  s.hidden = false;
+}
+
+function refreshCfgUI() {
+  const hasKey = !!localStorage.getItem(LS_KEY);
+  const ks = $("keyState");
+  ks.textContent = hasKey ? "키 저장됨 ✓" : "키 없음";
+  ks.className = hasKey ? "on" : "off";
+  $("modelChip").textContent = localStorage.getItem(LS_MODEL) || DEFAULT_MODEL;
+}
+/* 모델 드롭다운: OpenRouter 공개 모델 목록을 열 때 1회 로드 (실패 시 기본 3종 유지) */
+const CURATED_MODELS = ["z-ai/glm-4.6", "z-ai/glm-4.5-air", "deepseek/deepseek-chat-v3.1"];
+let modelsLoaded = false;
+function ensureModelOption(sel, id) {
+  if (![...sel.options].some(o => o.value === id)) sel.appendChild(new Option(id, id));
+}
+async function loadModels() {
+  if (modelsLoaded) return;
+  const sel = $("modelIn");
+  try {
+    const res = await fetch("https://openrouter.ai/api/v1/models");
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    const j = await res.json();
+    const ids = (j.data || []).map(m => m.id).filter(Boolean).sort();
+    if (!ids.length) throw new Error("빈 목록");
+    const cur = sel.value || localStorage.getItem(LS_MODEL) || DEFAULT_MODEL;
+    sel.innerHTML = "";
+    const g1 = document.createElement("optgroup");
+    g1.label = "추천 (저비용 진단용)";
+    for (const id of CURATED_MODELS) g1.appendChild(new Option(id === DEFAULT_MODEL ? id + " (기본)" : id, id));
+    const g2 = document.createElement("optgroup");
+    g2.label = "OpenRouter 전체 (" + ids.length + "개)";
+    for (const id of ids) if (!CURATED_MODELS.includes(id)) g2.appendChild(new Option(id, id));
+    sel.append(g1, g2);
+    ensureModelOption(sel, cur);
+    sel.value = cur;
+    modelsLoaded = true;
+  } catch {
+    /* 오프라인/차단 시 기본 3종 드롭다운 유지 */
+  }
+}
+function toggleSettings(force) {
+  const s = $("settings");
+  s.hidden = force === undefined ? !s.hidden : !force;
+  $("cfgBtn").setAttribute("aria-expanded", String(!s.hidden));
+  if (!s.hidden) {
+    const sel = $("modelIn");
+    const cur = localStorage.getItem(LS_MODEL) || DEFAULT_MODEL;
+    ensureModelOption(sel, cur);
+    sel.value = cur;
+    loadModels();
+  }
+}
+$("cfgBtn").addEventListener("click", () => toggleSettings());
+$("saveCfg").addEventListener("click", () => {
+  const k = $("keyIn").value.trim();
+  if (k) localStorage.setItem(LS_KEY, k);
+  const m = $("modelIn").value.trim();
+  if (m) localStorage.setItem(LS_MODEL, m);
+  $("keyIn").value = "";
+  toggleSettings(false);
+  refreshCfgUI();
+});
+$("clearKey").addEventListener("click", () => {
+  localStorage.removeItem(LS_KEY);
+  refreshCfgUI();
+});
+// 드롭다운 밖 클릭 시 닫기
+document.addEventListener("click", (e) => {
+  if (e.target.closest(".cfg")) return;
+  if (!$("settings").hidden) toggleSettings(false);
+  const md = document.getElementById("manualDrop");
+  if (md && !md.hidden) md.hidden = true;
+});
+refreshCfgUI();
+
+/* 테마: 기본은 시스템 설정(자동), 버튼으로 자동→라이트→다크 순환. ?theme= 은 이번 접속만 강제(저장 안 함) */
+const LS_THEME = "uc_theme";
+const THEME_SEQ = ["auto", "light", "dark"];
+const THEME_LABEL = { auto: "◐ 자동", light: "○ 라이트", dark: "● 다크" };
+let theme = new URLSearchParams(location.search).get("theme") || localStorage.getItem(LS_THEME) || "auto";
+if (!THEME_SEQ.includes(theme)) theme = "auto";
+function applyTheme() {
+  if (theme === "auto") delete document.documentElement.dataset.theme;
+  else document.documentElement.dataset.theme = theme;
+  $("themeBtn").textContent = THEME_LABEL[theme];
+}
+$("themeBtn").addEventListener("click", () => {
+  theme = THEME_SEQ[(THEME_SEQ.indexOf(theme) + 1) % THEME_SEQ.length];
+  localStorage.setItem(LS_THEME, theme);
+  applyTheme();
+});
+applyTheme();
+
+const taskEl = $("task");
+function growTask() {
+  taskEl.style.height = "auto";
+  taskEl.style.height = Math.min(taskEl.scrollHeight + 2, 136) + "px";
+}
+taskEl.addEventListener("input", growTask);
+taskEl.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && !e.shiftKey && !e.isComposing) {
+    e.preventDefault();
+    diagnose();
+  }
+});
+
+async function callOpenRouter(key, messages) {
+  const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer " + key,
+      "Content-Type": "application/json",
+      "X-Title": "Unknown Compass",
+    },
+    body: JSON.stringify({
+      model: localStorage.getItem(LS_MODEL) || DEFAULT_MODEL,
+      messages,
+    }),
+  });
+  if (res.status === 401) throw new Error("API 키가 유효하지 않습니다 (401). 우측 상단 ⚙ API 설정에서 키를 확인하세요.");
+  if (!res.ok) throw new Error("OpenRouter 오류 (" + res.status + ")");
+  const j = await res.json();
+  const content = j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content;
+  if (!content) throw new Error("모델이 빈 응답을 돌려줬습니다.");
+  return content;
+}
+
+let diagnosing = false;
+async function diagnose() {
+  if (diagnosing) return;
+  const task = taskEl.value.trim();
+  if (!task) { taskEl.focus(); return; }
+
+  const key = localStorage.getItem(LS_KEY);
+  if (!key) {
+    prepareManual(task);
+    setStatus("warn", "API 키가 없습니다 — 우측 상단 [⚙ API 설정]에 OpenRouter 키를 넣으면 원클릭 진단이 됩니다. 키 없이 쓰려면 나침반 아래 'API 키 없이 쓰기'를 펼치세요.");
+    toggleSettings(true);
+    openManualUI();
+    return;
+  }
+
+  diagnosing = true;
+  $("sendBtn").disabled = true;
+  setStatus("busy", '<span class="spin">🧭</span> 언노운 진단 중…');
+  try {
+    const promptMsg = { role: "user", content: buildPrompt(task) };
+    let raw = await callOpenRouter(key, [promptMsg]);
+    let data;
+    try {
+      data = extractJSON(raw);
+    } catch {
+      setStatus("busy", '<span class="spin">🧭</span> 응답 형식 보정 중…');
+      raw = await callOpenRouter(key, [
+        promptMsg,
+        { role: "assistant", content: raw },
+        { role: "user", content: "다른 말 없이, 위 결과를 지정한 JSON 스키마로만 다시 출력해줘." },
+      ]);
+      data = extractJSON(raw);
+    }
+    const res = render(data);
+    const { total, blind, pct } = res;
+    logDiagnosis(task, res);
+    setStatus("ok", `진단 완료 — 전체 ${total}개 중 ${blind}개(${pct}%)가 인식 사각지대(UK+UU). 나침반에서 항목별 권장 패턴을 확인하고, 입력을 고쳐 다시 보내면 재진단됩니다.`);
+    $("board").scrollIntoView({ behavior: "smooth", block: "start" });
+  } catch (e) {
+    prepareManual(task);
+    setStatus("warn", "진단 실패: " + e.message + " — 키 없이 쓰려면 나침반 아래 'API 키 없이 쓰기'를 펼치세요.");
+    openManualUI();
+  } finally {
+    diagnosing = false;
+    $("sendBtn").disabled = false;
+  }
+}
+$("sendBtn").addEventListener("click", diagnose);
+
+function prepareManual(task) {
+  $("promptBox").textContent = buildPrompt(task);
+  $("promptBox").hidden = false;
+  $("copyBtn").disabled = false;
+}
+$("genBtn").addEventListener("click", () => {
+  const task = taskEl.value.trim();
+  if (!task) { taskEl.focus(); return; }
+  prepareManual(task);
+});
+$("copyBtn").addEventListener("click", async () => {
+  try {
+    await navigator.clipboard.writeText($("promptBox").textContent);
+    $("copyFlash").textContent = "복사됨 ✓";
+  } catch {
+    $("copyFlash").textContent = "복사 실패 — 직접 선택해 복사하세요";
+  }
+  setTimeout(() => { $("copyFlash").textContent = ""; }, 2500);
+});
+$("vizBtn").addEventListener("click", () => {
+  $("jsonErr").hidden = true;
+  try {
+    const r = render(extractJSON($("jsonIn").value));
+    logDiagnosis(taskEl.value.trim() || "(수동 진단)", r);
+    setStatus("ok", `수동 진단 반영 — 사각지대 ${r.pct}%.`);
+  } catch (e) {
+    $("jsonErr").textContent = "해석 실패: " + e.message;
+    $("jsonErr").hidden = false;
+  }
+});
+
+/* 수동 모드 표시 방식 (변형별) */
+function openManualUI() { $("manualBox").open = true; }
+
+const DEMO_TASK = "우리 서비스에 소셜 로그인을 붙이려고 해. 인증은 처음이라 OAuth가 뭔지도 잘 몰라. 기존 코드베이스는 Next.js인데 auth 모듈은 한 번도 안 열어봤어.";
+const DEMO_DATA = {
+  items: [
+    { quadrant: "KK", label: "Next.js에 소셜 로그인 추가", note: "명시된 목표", pattern: "구현 계획서" },
+    { quadrant: "KK", label: "기존 코드베이스는 Next.js", note: "명시된 제약", pattern: "레퍼런스" },
+    { quadrant: "KU", label: "어떤 소셜 제공자를 지원할지", note: "정해야 함을 본인도 인식", pattern: "AI 역질문" },
+    { quadrant: "KU", label: "세션 유지 방식(JWT vs 세션)", note: "미결정이라고 언급", pattern: "AI 역질문" },
+    { quadrant: "UK", label: "기존 회원과 소셜 계정의 병합 규칙", note: "당연히 합쳐진다고 가정했을 것", pattern: "브레인스토밍·프로토타입" },
+    { quadrant: "UK", label: "로그인 실패/거부 시 UX", note: "성공 경로만 상상했을 가능성", pattern: "브레인스토밍·프로토타입" },
+    { quadrant: "UU", label: "OAuth 리다이렉트 URI 검증·CSRF 등 보안 함정", note: "인증 초심자가 존재를 모르는 영역", pattern: "블라인드스팟 패스" },
+    { quadrant: "UU", label: "제공자별 이메일 미제공 케이스", note: "좋은 구현의 기준 자체를 모름", pattern: "블라인드스팟 패스" }
+  ]
+};
+function runDemo() {
+  taskEl.value = DEMO_TASK;
+  growTask();
+  const r = render(DEMO_DATA);
+  $("jsonIn").value = JSON.stringify(DEMO_DATA, null, 2);
+  setStatus("ok", `(예시) 진단 완료 — 전체 ${r.total}개 중 ${r.blind}개(${r.pct}%)가 인식 사각지대. 실제 진단은 입력을 고쳐 [진단 →]을 누르세요.`);
+}
+document.querySelectorAll("[data-demo]").forEach(b => b.addEventListener("click", runDemo));
+document.querySelectorAll("[data-fill]").forEach(b => b.addEventListener("click", () => {
+  taskEl.value = b.dataset.fill;
+  growTask();
+  taskEl.focus();
+}));
+
+/* ══════════ 진단 기록 (localStorage 누적 로그 + 타임라인) ══════════ */
+const LS_LOG = "uc_log";
+function loadLog() {
+  try { const l = JSON.parse(localStorage.getItem(LS_LOG) || "[]"); return Array.isArray(l) ? l : []; }
+  catch { return []; }
+}
+function saveLog(l) {
+  l.sort((a, b) => a.ts - b.ts);            // 항상 시간순 저장 (데모 시드가 섞여도 추이 정확)
+  localStorage.setItem(LS_LOG, JSON.stringify(l.slice(-200)));  // 최근 200건 캡
+}
+function logDiagnosis(task, r) {
+  if (!r || !r.counts) return;
+  const l = loadLog();
+  l.push({ ts: Date.now(), task: String(task || "").slice(0, 300),
+           counts: r.counts, total: r.total, blind: r.blind, pct: r.pct });
+  saveLog(l);
+  renderLog();
+  $("logBox").open = true;                  // 기록이 실시간으로 나타나도록
+}
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+function fmtTs(ms) {
+  const d = new Date(ms), p = n => String(n).padStart(2, "0");
+  return `${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+const pctSev = p => p >= 60 ? "hi" : p >= 30 ? "mid" : "lo";
+function logDist(counts, total) {
+  return `<div class="lg-dist" role="img" aria-label="사분면 분포">` +
+    QUADS.map(q => `<span style="background:${QCOLOR[q]};width:${total ? (counts[q] || 0) / total * 100 : 0}%" title="${QNAME[q]} ${counts[q] || 0}"></span>`).join("") +
+    `</div>`;
+}
+function renderLog() {
+  const l = loadLog();
+  $("logCount").textContent = l.length + "건";
+  const has = l.length > 0;
+  $("logEmpty").hidden = has;
+  $("logTl").hidden = !has;
+  $("logJson").disabled = !has;
+  $("logCsv").disabled = !has;
+  $("logClear").disabled = !has;
+  if (!has) { $("logTl").innerHTML = ""; $("logClearBanner").hidden = true; return; }
+  l.forEach((e, i) => { e._delta = i > 0 ? e.pct - l[i - 1].pct : null; });  // 직전(시간순) 대비
+  const view = [...l].reverse();  // 최신순 (위가 최근)
+  $("logTl").innerHTML = view.map(e => {
+    const topQ = QUADS.reduce((a, b) => (e.counts[b] || 0) > (e.counts[a] || 0) ? b : a, "KK");
+    let delta;
+    if (e._delta === null || e._delta === undefined) delta = `<span class="lg-delta base">최초 진단</span>`;
+    else {
+      const d = e._delta, cls = d < 0 ? "down" : d > 0 ? "up" : "flat", arw = d < 0 ? "▼" : d > 0 ? "▲" : "▬";
+      delta = `<span class="lg-delta ${cls}">${arw} ${Math.abs(d)}%p</span>`;
+    }
+    return `<div class="lg-row" style="--qc:${QCOLOR[topQ]}">
+      <span class="lg-node"></span>
+      <div class="lg-main">
+        <div class="lg-ts">${fmtTs(e.ts)}</div>
+        <div class="lg-task" style="margin-top:0.15rem">${escapeHtml(e.task)}</div>
+      </div>
+      <div class="lg-side">
+        ${logDist(e.counts, e.total)}
+        <div class="lg-pctline"><span class="lg-pct ${pctSev(e.pct)}">사각지대 ${e.pct}%</span>${delta}</div>
+      </div>
+    </div>`;
+  }).join("");
+}
+function downloadFile(name, text, mime) {
+  const blob = new Blob([text], { type: mime });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = name; document.body.appendChild(a); a.click();
+  a.remove(); URL.revokeObjectURL(url);
+}
+$("logJson").addEventListener("click", () => {
+  const l = loadLog().map(({ _delta, ...e }) => e);  // 파생 필드 제외
+  downloadFile("unknown-compass-log.json", JSON.stringify(l, null, 2), "application/json");
+});
+function csvCell(v) {
+  v = String(v ?? "");
+  return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v;
+}
+$("logCsv").addEventListener("click", () => {
+  const l = loadLog();
+  const head = ["일시", "작업", "KK", "KU", "UK", "UU", "전체", "사각지대", "사각지대%"];
+  const rows = l.map(e => [
+    new Date(e.ts).toLocaleString("ko-KR"), e.task,
+    e.counts.KK || 0, e.counts.KU || 0, e.counts.UK || 0, e.counts.UU || 0,
+    e.total, e.blind, e.pct,
+  ].map(csvCell).join(","));
+  const csv = "﻿" + [head.join(","), ...rows].join("\r\n");  // BOM: Excel 한글 대응
+  downloadFile("unknown-compass-log.csv", csv, "text/csv;charset=utf-8");
+});
+/* 삭제: 브라우저 confirm 대신 인라인 확인 배너 (다이얼로그 차단 회피) */
+$("logClear").addEventListener("click", () => { $("logClearBanner").hidden = false; });
+$("logClearNo").addEventListener("click", () => { $("logClearBanner").hidden = true; });
+$("logClearYes").addEventListener("click", () => {
+  localStorage.removeItem(LS_LOG);
+  $("logClearBanner").hidden = true;
+  renderLog();
+});
+/* 데모: 키 없이도 패널·내보내기·삭제를 테스트하도록 사각지대 75%→25% 추이 시드 */
+function seedDemoLog() {
+  const now = Date.now(), HR = 3600000;
+  const seed = [
+    { off: 72, task: "공모전 제안서 초안을 AI에게 맡기려고 해. 심사 기준표는 아직 제대로 안 읽어봤어.", c: { KK: 1, KU: 1, UK: 3, UU: 3 } },
+    { off: 48, task: "우리 서비스에 소셜 로그인을 붙이려고 해. 인증은 처음이라 OAuth가 뭔지도 잘 몰라.", c: { KK: 2, KU: 1, UK: 2, UU: 3 } },
+    { off: 26, task: "유튜브 영상 요약 크롬 확장을 졸업작품으로 만들려고 해. 확장 개발은 처음이야.", c: { KK: 2, KU: 2, UK: 2, UU: 2 } },
+    { off: 6, task: "소셜 로그인 (2차) — 제공자는 구글/카카오로 좁혔고 계정 병합 규칙도 정했어.", c: { KK: 3, KU: 2, UK: 2, UU: 1 } },
+    { off: 1, task: "제안서 초안 (2차) — 심사 기준표 반영, 실패 시나리오 3개 후보로 압축.", c: { KK: 3, KU: 3, UK: 1, UU: 1 } },
+  ];
+  const l = loadLog();
+  for (const s of seed) {
+    const total = QUADS.reduce((a, q) => a + s.c[q], 0), blind = s.c.UK + s.c.UU;
+    l.push({ ts: now - s.off * HR, task: s.task, counts: s.c, total, blind, pct: Math.round(blind / total * 100) });
+  }
+  saveLog(l);
+  renderLog();
+  $("logBox").open = true;
+  $("logBox").scrollIntoView({ behavior: "smooth", block: "center" });
+}
+$("logDemo").addEventListener("click", seedDemoLog);
+renderLog();
+
+if (location.hash === "#demo") runDemo();
+if (location.hash === "#log") { seedDemoLog(); }
+if (location.hash === "#cfg") toggleSettings(true);
+
+</script>
+</body>
+</html>
