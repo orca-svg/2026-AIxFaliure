@@ -217,6 +217,42 @@
   details.inline > summary { cursor: pointer; font-size: 0.78rem; font-weight: 700; color: var(--muted);
     text-decoration: underline; text-underline-offset: 3px; width: fit-content; }
   details.inline .inner { margin-top: 0.6rem; border: 2px solid var(--line); background: var(--surface-1); box-shadow: 4px 4px 0 var(--shadow); padding: 0.8rem 0.9rem; }
+
+  /* ── 진단 기록 패널 (타임라인) — 쓸수록 쌓이는 언노운 추이 ── */
+  .lg-count { font-size: 0.72rem; font-weight: 800; color: var(--text-secondary); border: 1.5px solid var(--line); padding: 0 0.4rem; background: var(--page); text-decoration: none; margin-left: 0.3rem; }
+  .lg-help { font-size: 0.76rem; color: var(--text-secondary); margin-bottom: 0.6rem; }
+  .lg-toolbar { margin-bottom: 0.75rem; }
+  /* 삭제 확인 배너 (브라우저 confirm 대신 — 다이얼로그 차단 회피) */
+  .lg-confirm {
+    display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;
+    background: color-mix(in srgb, var(--warn) 12%, var(--surface-1));
+    border: 2px solid var(--warn); box-shadow: 4px 4px 0 var(--shadow);
+    padding: 0.6rem 0.8rem; margin-bottom: 0.75rem;
+  }
+  .lg-confirm[hidden] { display: none; }
+  .lg-confirm-msg { font-size: 0.8rem; font-weight: 700; color: var(--text-primary); flex: 1 1 16rem; }
+  .lg-confirm .warn-btn { background: var(--warn); color: var(--accent-fg); }
+  .lg-dist { display: flex; height: 12px; gap: 2px; border: 1.5px solid var(--line); background: var(--surface-1); min-width: 150px; }
+  .lg-dist span { display: block; height: 100%; }
+  .lg-pct { font-weight: 900; font-variant-numeric: tabular-nums; }
+  .lg-pct.hi { color: var(--warn); } .lg-pct.mid { color: var(--q-uk); } .lg-pct.lo { color: var(--ok); }
+  .lg-ts { font-size: 0.72rem; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .lg-task { font-size: 0.82rem; font-weight: 700; }
+  .lg-delta { font-size: 0.72rem; font-weight: 800; font-variant-numeric: tabular-nums; margin-left: 0.45rem; }
+  .lg-delta.down { color: var(--ok); } .lg-delta.up { color: var(--warn); } .lg-delta.flat, .lg-delta.base { color: var(--muted); }
+  .lg-tl { position: relative; padding-left: 1.4rem; }
+  .lg-tl::before { content: ""; position: absolute; left: 5px; top: 4px; bottom: 4px; width: 2px; background: var(--line); }
+  .lg-row { position: relative; padding: 0 0 1rem; display: flex; gap: 1rem; align-items: flex-start; }
+  .lg-row:last-child { padding-bottom: 0; }
+  .lg-row .lg-node { position: absolute; left: -1.4rem; top: 4px; width: 12px; height: 12px; border: 2px solid var(--line); background: var(--qc); border-radius: 50%; }
+  .lg-row .lg-main { flex: 1; min-width: 0; }
+  .lg-row .lg-side { flex: 0 0 auto; display: flex; flex-direction: column; align-items: flex-end; gap: 0.4rem; text-align: right; }
+  .lg-row .lg-pctline { display: flex; align-items: baseline; }
+  @media (max-width: 560px) {
+    .lg-row { flex-direction: column; gap: 0.35rem; }
+    .lg-row .lg-side { align-items: flex-start; text-align: left; }
+    .lg-dist { min-width: 120px; }
+  }
 </style>
 </head>
 <body data-state="empty">
@@ -338,6 +374,29 @@
       </details>
       </div>
     </details>
+
+    <!-- 진단 기록: 진단할 때마다 이 브라우저에만 누적 저장 → 사각지대 추이 -->
+    <details class="inline" id="logBox">
+      <summary>📋 내 진단 기록 <span class="lg-count" id="logCount">0건</span> — 쓸수록 쌓이는 내 언노운 추이</summary>
+      <div class="inner">
+        <p class="lg-help">진단할 때마다 이 브라우저에만 자동 저장됩니다(서버 전송 없음). 같은 작업을 고쳐 다시 진단하면 인식 사각지대(UK+UU) 비율이 어떻게 변하는지 최신순으로 추적됩니다 — <strong>AI를 쓰는 행위 자체가 메타인지 훈련의 기록</strong>이 되는, 대응 방안(AI 리터러시)의 실증부입니다.</p>
+        <div class="mrow lg-toolbar">
+          <button id="logJson" class="secondary small" disabled>JSON 내보내기</button>
+          <button id="logCsv" class="secondary small" disabled>CSV 내보내기</button>
+          <button id="logClear" class="secondary small" disabled>전체 삭제</button>
+          <span style="flex:1"></span>
+          <button id="logDemo" class="secondary small">▶ 데모 로그 채우기</button>
+        </div>
+        <div id="logClearBanner" class="lg-confirm" hidden role="alertdialog" aria-label="진단 기록 삭제 확인">
+          <span class="lg-confirm-msg">정말 삭제하시겠습니까? 이 브라우저에 저장된 진단 기록 전체가 지워지며 되돌릴 수 없습니다.</span>
+          <span style="flex:1"></span>
+          <button id="logClearYes" class="small warn-btn">삭제</button>
+          <button id="logClearNo" class="secondary small">취소</button>
+        </div>
+        <p id="logEmpty" class="empty">아직 기록이 없습니다. 작업을 진단하거나 [▶ 데모 로그 채우기]로 예시 추이를 확인하세요.</p>
+        <div class="lg-tl" id="logTl" hidden></div>
+      </div>
+    </details>
   </section>
 </main>
 
@@ -455,7 +514,9 @@ function render(data) {
      <div class="bar-legend">${legend}</div>`;
   $("summary").hidden = false;
   document.body.dataset.state = "done";
-  return { total, blind, pct };
+  const counts = {};
+  for (const q of QUADS) counts[q] = buckets[q].length;
+  return { total, blind, pct, counts };
 }
 
 function setStatus(cls, html) {
@@ -623,7 +684,9 @@ async function diagnose() {
       ]);
       data = extractJSON(raw);
     }
-    const { total, blind, pct } = render(data);
+    const res = render(data);
+    const { total, blind, pct } = res;
+    logDiagnosis(task, res);
     setStatus("ok", `진단 완료 — 전체 ${total}개 중 ${blind}개(${pct}%)가 인식 사각지대(UK+UU). 나침반에서 항목별 권장 패턴을 확인하고, 입력을 고쳐 다시 보내면 재진단됩니다.`);
     $("board").scrollIntoView({ behavior: "smooth", block: "start" });
   } catch (e) {
@@ -660,6 +723,7 @@ $("vizBtn").addEventListener("click", () => {
   $("jsonErr").hidden = true;
   try {
     const r = render(extractJSON($("jsonIn").value));
+    logDiagnosis(taskEl.value.trim() || "(수동 진단)", r);
     setStatus("ok", `수동 진단 반영 — 사각지대 ${r.pct}%.`);
   } catch (e) {
     $("jsonErr").textContent = "해석 실패: " + e.message;
@@ -697,7 +761,130 @@ document.querySelectorAll("[data-fill]").forEach(b => b.addEventListener("click"
   taskEl.focus();
 }));
 
+/* ══════════ 진단 기록 (localStorage 누적 로그 + 타임라인) ══════════ */
+const LS_LOG = "uc_log";
+function loadLog() {
+  try { const l = JSON.parse(localStorage.getItem(LS_LOG) || "[]"); return Array.isArray(l) ? l : []; }
+  catch { return []; }
+}
+function saveLog(l) {
+  l.sort((a, b) => a.ts - b.ts);            // 항상 시간순 저장 (데모 시드가 섞여도 추이 정확)
+  localStorage.setItem(LS_LOG, JSON.stringify(l.slice(-200)));  // 최근 200건 캡
+}
+function logDiagnosis(task, r) {
+  if (!r || !r.counts) return;
+  const l = loadLog();
+  l.push({ ts: Date.now(), task: String(task || "").slice(0, 300),
+           counts: r.counts, total: r.total, blind: r.blind, pct: r.pct });
+  saveLog(l);
+  renderLog();
+  $("logBox").open = true;                  // 기록이 실시간으로 나타나도록
+}
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+function fmtTs(ms) {
+  const d = new Date(ms), p = n => String(n).padStart(2, "0");
+  return `${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+const pctSev = p => p >= 60 ? "hi" : p >= 30 ? "mid" : "lo";
+function logDist(counts, total) {
+  return `<div class="lg-dist" role="img" aria-label="사분면 분포">` +
+    QUADS.map(q => `<span style="background:${QCOLOR[q]};width:${total ? (counts[q] || 0) / total * 100 : 0}%" title="${QNAME[q]} ${counts[q] || 0}"></span>`).join("") +
+    `</div>`;
+}
+function renderLog() {
+  const l = loadLog();
+  $("logCount").textContent = l.length + "건";
+  const has = l.length > 0;
+  $("logEmpty").hidden = has;
+  $("logTl").hidden = !has;
+  $("logJson").disabled = !has;
+  $("logCsv").disabled = !has;
+  $("logClear").disabled = !has;
+  if (!has) { $("logTl").innerHTML = ""; $("logClearBanner").hidden = true; return; }
+  l.forEach((e, i) => { e._delta = i > 0 ? e.pct - l[i - 1].pct : null; });  // 직전(시간순) 대비
+  const view = [...l].reverse();  // 최신순 (위가 최근)
+  $("logTl").innerHTML = view.map(e => {
+    const topQ = QUADS.reduce((a, b) => (e.counts[b] || 0) > (e.counts[a] || 0) ? b : a, "KK");
+    let delta;
+    if (e._delta === null || e._delta === undefined) delta = `<span class="lg-delta base">최초 진단</span>`;
+    else {
+      const d = e._delta, cls = d < 0 ? "down" : d > 0 ? "up" : "flat", arw = d < 0 ? "▼" : d > 0 ? "▲" : "▬";
+      delta = `<span class="lg-delta ${cls}">${arw} ${Math.abs(d)}%p</span>`;
+    }
+    return `<div class="lg-row" style="--qc:${QCOLOR[topQ]}">
+      <span class="lg-node"></span>
+      <div class="lg-main">
+        <div class="lg-ts">${fmtTs(e.ts)}</div>
+        <div class="lg-task" style="margin-top:0.15rem">${escapeHtml(e.task)}</div>
+      </div>
+      <div class="lg-side">
+        ${logDist(e.counts, e.total)}
+        <div class="lg-pctline"><span class="lg-pct ${pctSev(e.pct)}">사각지대 ${e.pct}%</span>${delta}</div>
+      </div>
+    </div>`;
+  }).join("");
+}
+function downloadFile(name, text, mime) {
+  const blob = new Blob([text], { type: mime });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = name; document.body.appendChild(a); a.click();
+  a.remove(); URL.revokeObjectURL(url);
+}
+$("logJson").addEventListener("click", () => {
+  const l = loadLog().map(({ _delta, ...e }) => e);  // 파생 필드 제외
+  downloadFile("unknown-compass-log.json", JSON.stringify(l, null, 2), "application/json");
+});
+function csvCell(v) {
+  v = String(v ?? "");
+  return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v;
+}
+$("logCsv").addEventListener("click", () => {
+  const l = loadLog();
+  const head = ["일시", "작업", "KK", "KU", "UK", "UU", "전체", "사각지대", "사각지대%"];
+  const rows = l.map(e => [
+    new Date(e.ts).toLocaleString("ko-KR"), e.task,
+    e.counts.KK || 0, e.counts.KU || 0, e.counts.UK || 0, e.counts.UU || 0,
+    e.total, e.blind, e.pct,
+  ].map(csvCell).join(","));
+  const csv = "﻿" + [head.join(","), ...rows].join("\r\n");  // BOM: Excel 한글 대응
+  downloadFile("unknown-compass-log.csv", csv, "text/csv;charset=utf-8");
+});
+/* 삭제: 브라우저 confirm 대신 인라인 확인 배너 (다이얼로그 차단 회피) */
+$("logClear").addEventListener("click", () => { $("logClearBanner").hidden = false; });
+$("logClearNo").addEventListener("click", () => { $("logClearBanner").hidden = true; });
+$("logClearYes").addEventListener("click", () => {
+  localStorage.removeItem(LS_LOG);
+  $("logClearBanner").hidden = true;
+  renderLog();
+});
+/* 데모: 키 없이도 패널·내보내기·삭제를 테스트하도록 사각지대 75%→25% 추이 시드 */
+function seedDemoLog() {
+  const now = Date.now(), HR = 3600000;
+  const seed = [
+    { off: 72, task: "공모전 제안서 초안을 AI에게 맡기려고 해. 심사 기준표는 아직 제대로 안 읽어봤어.", c: { KK: 1, KU: 1, UK: 3, UU: 3 } },
+    { off: 48, task: "우리 서비스에 소셜 로그인을 붙이려고 해. 인증은 처음이라 OAuth가 뭔지도 잘 몰라.", c: { KK: 2, KU: 1, UK: 2, UU: 3 } },
+    { off: 26, task: "유튜브 영상 요약 크롬 확장을 졸업작품으로 만들려고 해. 확장 개발은 처음이야.", c: { KK: 2, KU: 2, UK: 2, UU: 2 } },
+    { off: 6, task: "소셜 로그인 (2차) — 제공자는 구글/카카오로 좁혔고 계정 병합 규칙도 정했어.", c: { KK: 3, KU: 2, UK: 2, UU: 1 } },
+    { off: 1, task: "제안서 초안 (2차) — 심사 기준표 반영, 실패 시나리오 3개 후보로 압축.", c: { KK: 3, KU: 3, UK: 1, UU: 1 } },
+  ];
+  const l = loadLog();
+  for (const s of seed) {
+    const total = QUADS.reduce((a, q) => a + s.c[q], 0), blind = s.c.UK + s.c.UU;
+    l.push({ ts: now - s.off * HR, task: s.task, counts: s.c, total, blind, pct: Math.round(blind / total * 100) });
+  }
+  saveLog(l);
+  renderLog();
+  $("logBox").open = true;
+  $("logBox").scrollIntoView({ behavior: "smooth", block: "center" });
+}
+$("logDemo").addEventListener("click", seedDemoLog);
+renderLog();
+
 if (location.hash === "#demo") runDemo();
+if (location.hash === "#log") { seedDemoLog(); }
 if (location.hash === "#cfg") toggleSettings(true);
 
 </script>
