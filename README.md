@@ -29,54 +29,73 @@
 
 **→ [전문 읽기: 《최적화된 아이들》 — 2026–2036 연대기](story/2036-optimized-children.md)**
 
-## 2. 원인 진단 
+## 2. 원인 진단
 
-```
-AI 지원으로 산출물 급상승
-        ↓
-학교·사회가 결과물과 완수율을 성공의 증거로 간주
-        ↓
-질문·검증·수정의 사고 과정이 평가에서 사라짐
-        ↓
-인간의 지적 능력을 비효율적인 비용으로 취급
-        ↓
-2036: 모든 성과 지표는 올랐지만, 도움 없이 남는 역량은 소멸
-```
+### ① 사고의 외주화
 
-문제는 AI가 인간 평가를 단번에 무너뜨렸다는 데 있지 않습니다. AI가 만든 성과의 효용이 커질수록
-학교와 사회가 **인간의 지적 능력을 덜 중요하게 취급하는 선택**을 반복했고, 그 선택이 평가 제도로
-굳어진 데 있습니다. 높은 산출물은 학습의 증거가 아니지만, 우리는 둘을 구분할 과정 데이터를
-만들지 않았습니다.
+AI에 사고 과정을 반복적으로 맡기면서 문제를 기억하고 검증하며 자기 판단으로 소유하는 능력이 약해지는 현상입니다.
 
-제안서에서 인용한 연구·뉴스와 프로젝트에서 검토한 참고자료는
-[`REFERENCES.md`](REFERENCES.md)에 통합해 정리했습니다.
+- [MIT Media Lab — *Your Brain on ChatGPT*](https://www.media.mit.edu/publications/your-brain-on-chatgpt/) — 54명의 에세이 작성 실험에서 LLM 집단이 가장 낮은 뇌 연결성과 자기 글 회상·소유감을 보였습니다.
+- [Gerlich — *AI Tools in Society*](https://doi.org/10.3390/soc15010006) — 666명 조사에서 AI 사용과 비판적 사고 사이의 음의 상관을 인지 오프로딩이 매개한다고 분석했습니다.
+
+### ② 인지 격차
+
+같은 AI를 사용할 수 있어도 답을 이해하고 의심하며 검증하는 역량의 차이가 인지 능력의 격차로 누적되는 현상입니다.
+
+- [국민일보 — 「AI 리터러시와 불평등」](https://www.kmib.co.kr/article/view.asp?arcid=1781057405&code=11171316&sid1=col) — 교육·소득이 높은 집단일수록 AI 정보를 이해하고 신뢰성을 판단하는 데 유리하다고 보도했습니다.
+- [Puri & Veldkamp — *Artificial Intelligence and Cognitive Inequality*](https://doi.org/10.1016/j.jmoneco.2025.103884) — AI 활용 능력의 차이가 생산성뿐 아니라 인지 능력의 불평등으로 이어질 수 있다고 분석했습니다.
+
+### ③ 평가의 오독
+
+AI가 높인 산출물의 완성도를 학생에게 실제로 남은 학습·판단 역량으로 잘못 해석하는 현상입니다.
+
+- [Inside Higher Ed — *The Handwriting Revolution*](https://www.insidehighered.com/news/deep-dives/2025/06/17/amid-ai-plagiarism-more-professors-turn-handwritten-work) — AI 대필 우려로 미국 대학에서 손글씨 과제와 블루북 시험이 다시 늘어난 현상을 다뤘습니다.
+- [IBTimes UK — *Brown University Students Fled After Handwritten Final*](https://www.ibtimes.co.uk/brown-university-ai-cheating-scandal-1808012) — Brown대 강의에서 재택 중간고사 평균 96점이 감독형 대면 기말에서 48점으로 낮아진 사례를 보도했습니다.
+
+**→ [전체 연구·뉴스와 원문 링크](REFERENCES.md)**
 
 ## 3. 대응 방안
 
-《최적화된 아이들》은 아래 회고 장치가 없었던 세계의 사고실험입니다. 필요한 것은 AI 사용법만
-가르치는 리터러시가 아니라, AI에게 일을 맡기기 전후에 **내가 아는 것과 모르는 것을 드러내는
-메타인지 리터러시**입니다.
+> 우리는 AI literacy를 **도구 활용 능력에서 메타인지로**, **개인 역량에서 이해관계자 전체의 책임으로** 확장할 것을 제안합니다.
 
-- [ ] **학습자 — 오늘부터:** 답을 요청하기 전에 알고 있는 것·모르는 것·추정하는 것을 먼저 기록하고, 답을 받은 뒤 무엇이 바뀌었는지 회고합니다.
-- [ ] **학교·교사 — 2028년까지 파일럿:** AI 튜터에 회고 단계를 내장하고, 최종 산출물보다 질문·검증·수정 과정과 AI 도움을 줄인 뒤 남는 역량을 평가합니다.
-- [ ] **교육 당국·공급자 — 2027~2031년:** 메타인지 리터러시를 공교육의 보편재로 배포하고, 교육 AI의 기대효과와 장기 파급효과를 출시 전에 서술·검증합니다.
+### 개념적 확장
 
-이 접근은 모델 금지나 대필 탐지보다 기술 변화에 덜 종속적입니다. 대신 prompting 기록이 감시로
-변질될 위험, 교사의 검토 부담, 보편 배포 비용이 있으므로 원문 저장 최소화·교사 재량·공공 투자를
-동시에 설계해야 합니다.
+- [OECD](https://www.oecd.org/en/publications/empowering-learners-for-the-age-of-ai_65cd27d4-en.html)는 AI literacy를 **학습자가 AI 시스템의 작동을 이해하고, 그 산출물을 비판적으로 평가하며, 윤리적·창의적으로 활용하도록 하는 지식·기술·태도의 집합**으로 정의합니다. 우리는 이를 자신의 앎과 모름, AI의 장기 파급효과까지 점검하는 메타인지로 확장합니다.
+- [Unknown Compass](https://unknown-compass.vercel.app)는 프롬프트 속 지식과 공백을 네 사분면으로 보여주고, 사용자가 답을 받기 전에 놓친 질문을 찾도록 돕습니다.
 
-이 문제의식에 공감한다면, 주변에 이 페이지를 공유해 주세요.
+### 대상적 확장
 
-### 직접 체험해보기 — 🧭 언노운 나침반
+- literacy의 대상을 학습자에서 **교사·학교·AI 공급자·정책 결정자**까지 넓힙니다.
+- 공교육은 검증 역량을 보편적으로 제공하고, 학교는 AI 도움을 줄인 뒤에도 남는 역량을 확인하며, 공급자와 정책 결정자는 도입 전에 장기 파급효과를 검토합니다.
+
+### 제도화의 필요성
+
+개인의 좋은 사용 습관만으로는 인지 격차와 평가의 오독을 막을 수 없습니다. 메타인지 회고를 교육과정과 AI 제품의 워크플로에 넣고, 교육 AI의 기술적 정확성뿐 아니라 판단 외주화·감시화·격차 같은 장기 영향도 함께 검증해야 합니다.
+
+### 실행 로드맵
+
+| 시점 | 주체 | 핵심 조치 |
+|---|---|---|
+| **즉시–2027** | 교육 AI 공급자 | 배포 전 고립·편향·진로 오판·격차 영향을 서술하고 공개 |
+| **2028** | 학교·교사 | 산출물보다 과정과 AI 지원 축소 후 남는 역량을 평가하는 파일럿 실시 |
+| **2029** | AI 정책 부처 | 교육 AI의 기대효과 사전 서술과 관리자 검증을 의무화 |
+| **2031** | 교육부·시도교육청 | 메타인지 literacy를 정규 과정에 편입하고 보편 배포 |
+
+## Unknown Compass 사용해보기
+
+**AI에게 답을 요청하기 전에, 내가 무엇을 놓치고 있는지 먼저 확인하세요.**
+
+Unknown Compass는 평소처럼 작업을 입력하면 `Known Knowns`, `Known Unknowns`, `Unknown Knowns`, `Unknown Unknowns`로 프롬프트를 분석합니다. 정답을 대신 만드는 도구가 아니라, 더 나은 질문을 시작하게 하는 **메타인지 자가 진단 도구**입니다.
 
 <p align="center">
   <a href="https://unknown-compass.vercel.app">
-    <img src="tool/assets/banner.svg" alt="Unknown Compass — AI에게 일을 시키기 전에, 내가 모르는 것부터 찾는 자가 진단. 클릭하면 라이브 데모로 이동" width="720">
+    <img src="tool/assets/banner.svg" alt="Unknown Compass — AI에게 일을 시키기 전에 내가 모르는 것부터 찾는 자가 진단" width="760">
   </a>
   <br>
-  <sub>대응 방안(AI 리터러시)의 프로토타입 — 설치·가입 없이 브라우저에서 바로 진단.
-  API 키가 없어도 <a href="https://unknown-compass.vercel.app/#demo">#demo</a>로 예시를 볼 수 있습니다.</sub>
+  <sub>설치·가입 없이 바로 체험할 수 있습니다. API 키가 없다면 <a href="https://unknown-compass.vercel.app/#demo">예시 진단</a>을 확인하세요.</sub>
 </p>
+
+**[라이브 데모](https://unknown-compass.vercel.app)** · **[예시 진단](https://unknown-compass.vercel.app/#demo)** · **[소스와 사용법](tool/)**
 
 ---
 
