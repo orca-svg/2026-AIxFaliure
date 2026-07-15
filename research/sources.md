@@ -9,11 +9,12 @@ README의 "근거" 섹션이 이 목록을 링크한다.
 
 ## 수집된 자료
 
-- [Anthropic 개발자의 Fable 5 공략집 (해설 영상)](https://youtu.be/PNMBRgc0y2g) —
-  Thariq(Anthropic Claude Code 팀)의 *Fable Field Guide — Finding my Unknowns* 해설.
-  4가지 언노운 분류 + 구현 전·중·후 8가지 프롬프트 패턴.
-  "결과물 품질은 모델 성능이 아니라 내 언노운 발굴 능력에 달렸다" / **대응 방안(AI 리터러시)** 의 이론적 근거,
-  [`tool/`](../tool/) 프로토타입의 원천.
+### Unknown Compass 원출처
+
+- [Thariq — *A Field Guide to Fable: Finding Your Unknowns* (X 원문)](https://x.com/trq212/status/2073100352921215386) —
+  4가지 언노운 분류와 구현 전·중·후의 탐색 패턴을 제시한 원문. 모델 성능보다 사용자가 자신의 언노운을 발견하는 능력이 결과물의 한계가 된다는 문제의식 / **대응 방안(AI 리터러시)** 및 [`tool/`](../tool/) 프로토타입의 직접 출처.
+- [Rumsfeld Matrix — “There are unknown unknowns”](https://en.wikipedia.org/wiki/There_are_unknown_unknowns) —
+  2002년 2월 12일 미국 국방부 브리핑에서 대중화된 `known knowns / known unknowns / unknown unknowns` 분류의 출처와 후대의 2×2 확장을 정리. 원 발언에는 `unknown knowns`가 없으며, 이는 매트릭스 정식화 과정에서 추가된 사분면 / **Unknown Compass의 4분면 구조 출처**.
 
 ### 교육·학습
 
