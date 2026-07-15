@@ -1,10 +1,10 @@
 # 미래에서 온 오답노트 — 2036년, TODO 제목
 
 > KAIST 실패연구소 **2026 AI×실패 아이디어 공모전** 참가작의 보완 자료입니다.
-> 심사는 1페이지 제안서(PDF)를 중심으로 진행되며, 이 페이지는 그 제안서를
-> **보완·확장**하기 위한 자료입니다 — 제안서 내용을 그대로 옮기지 않습니다.
+> 이 페이지는 제출 제안서(PDF)를 **보완·확장**하기 위한 자료입니다 —
+> 제안서 내용을 그대로 옮기지 않습니다.
 
-**📄 [제안서 PDF 보기](../../releases/latest)** ・ 팀 리볼빙 (이준엽 · 조기원)
+**📄 [제안서 PDF 보기](proposal/proposal.pdf)** ・ 팀 리볼빙 (이준엽 · 조기원)
 
 ---
 
@@ -105,7 +105,7 @@ Unknown Compass는 평소처럼 작업을 입력하면 `Known Knowns`, `Known Un
 
 | 경로 | 내용 |
 |------|------|
-| 📄 [`proposal/`](proposal/) | 제안서 Typst 소스 (`proposal.typ`) |
+| 📄 [`proposal/proposal.pdf`](proposal/proposal.pdf) · [`proposal/`](proposal/) | 제출 제안서 PDF · Typst 소스 |
 | 📖 [`story/`](story/2036-optimized-children.md) | 《최적화된 아이들》 — 1번 문항(예견된 실패)을 확장한 2026–2036 연대기 |
 | 🔍 [`research/`](research/) | 리서치·근거 자료 |
 | 🗓 [`research/meetings/`](research/meetings/) | 팀 회의 요약 — 회의별 논의·결정 사항 |
