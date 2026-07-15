@@ -1,8 +1,15 @@
+<p align="center">
+  <a href="https://unknown-compass.vercel.app">
+    <img src="assets/banner.svg" alt="Unknown Compass — AI에게 일을 시키기 전에, 내가 모르는 것부터 찾는 자가 진단. 클릭하면 라이브 데모로 이동" width="760">
+  </a>
+</p>
+
 # 🧭 Unknown Compass (언노운 나침반)
 
 AI에게 일을 시키기 전에, **내가 모르는 것부터 찾는** 프롬프트 기반 자가 진단 도구.
 
-**🌐 라이브 배포: <https://unknown-compass.vercel.app>**
+**🌐 라이브 배포: <https://unknown-compass.vercel.app>** — 설치·가입 없이 브라우저에서 바로.
+API 키가 없어도 [`#demo`](https://unknown-compass.vercel.app/#demo)로 예시 진단을, [`#log`](https://unknown-compass.vercel.app/#log)로 기록 추이를 즉시 볼 수 있다.
 
 ## 왜 만들었나
 

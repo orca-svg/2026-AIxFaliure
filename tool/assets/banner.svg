@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 300" role="img" aria-label="Unknown Compass — AI에게 일을 시키기 전에, 내가 모르는 것부터 찾는 자가 진단. unknown-compass.vercel.app">
+  <!-- 플레이트 -->
+  <rect x="36" y="36" width="1020" height="240" fill="#000"/>
+  <rect x="24" y="24" width="1020" height="240" fill="#fffdf4" stroke="#000" stroke-width="10"/>
+
+  <!-- 아이콘: 4분면 + UU를 가리키는 바늘 -->
+  <g>
+    <rect x="64" y="58" width="88" height="88" fill="#2a78d6"/>
+    <rect x="152" y="58" width="88" height="88" fill="#1baf7a"/>
+    <rect x="64" y="146" width="88" height="88" fill="#eda100"/>
+    <rect x="152" y="146" width="88" height="88" fill="#5b21b6"/>
+    <line x1="152" y1="58" x2="152" y2="234" stroke="#000" stroke-width="5"/>
+    <line x1="64" y1="146" x2="240" y2="146" stroke="#000" stroke-width="5"/>
+    <rect x="64" y="58" width="176" height="176" fill="none" stroke="#000" stroke-width="7"/>
+    <text x="219" y="226" text-anchor="middle" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="44" font-weight="900" fill="#fffdf4">?</text>
+    <g transform="rotate(45 152 146)">
+      <polygon points="216,146 152,133 152,159" fill="#c81e2c" stroke="#000" stroke-width="5" stroke-linejoin="round"/>
+      <polygon points="88,146 152,133 152,159" fill="#fffdf4" stroke="#000" stroke-width="5" stroke-linejoin="round"/>
+    </g>
+    <circle cx="152" cy="146" r="13" fill="#fffdf4" stroke="#000" stroke-width="6"/>
+    <circle cx="152" cy="146" r="4" fill="#000"/>
+  </g>
+
+  <!-- 워드마크 + 태그라인 -->
+  <text x="292" y="112" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="56" font-weight="900" letter-spacing="2" fill="#000">UNKNOWN COMPASS</text>
+  <text x="294" y="158" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="25" font-weight="600" fill="#333">AI에게 일을 시키기 전에 — 내가 모르는 것부터 찾는 자가 진단</text>
+
+  <!-- CTA 버튼 (하드 섀도) -->
+  <rect x="300" y="188" width="640" height="54" fill="#000"/>
+  <rect x="294" y="182" width="640" height="54" fill="#c81e2c" stroke="#000" stroke-width="5"/>
+  <text x="614" y="217" text-anchor="middle" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="23" font-weight="800" fill="#fff">▶ 지금 진단해보기 — unknown-compass.vercel.app</text>
+</svg>
