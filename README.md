@@ -105,7 +105,7 @@ Unknown Compass는 평소처럼 작업을 입력하면 `Known Knowns`, `Known Un
 
 | 경로 | 내용 |
 |------|------|
-| 📄 [`proposal/proposal.pdf`](proposal/proposal.pdf) · [`proposal/`](proposal/) | 제출 제안서 PDF · Typst 소스 |
+| 📄 [`proposal/proposal.pdf`](proposal/proposal.pdf) | 제출 제안서 PDF |
 | 📖 [`story/`](story/2036-optimized-children.md) | 《최적화된 아이들》 — 1번 문항(예견된 실패)을 확장한 2026–2036 연대기 |
 | 🔍 [`research/`](research/) | 리서치·근거 자료 |
 | 🗓 [`research/meetings/`](research/meetings/) | 팀 회의 요약 — 회의별 논의·결정 사항 |
