@@ -45,13 +45,12 @@
     }
   }
   * { box-sizing: border-box; margin: 0; }
-  html { scroll-padding-bottom: 8rem; }
   body {
     font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
     background: var(--page); color: var(--text-primary); line-height: 1.6;
-    padding-bottom: 8rem;
+    padding-bottom: 1.5rem;
   }
-  main { max-width: 1020px; margin: 0 auto; padding: 0 1.25rem; }
+  main { max-width: 1280px; margin: 0 auto; padding: 0 1.25rem; }
 
   /* ── 헤더: 좌측 브랜드+크레딧 / 우측 API 설정 드롭다운 ── */
   header {
@@ -105,16 +104,31 @@
   }
   #settings .hint { font-size: 0.7rem; color: var(--muted); width: 100%; }
 
-  /* ── 빈 상태 가이드 ── */
-  .empty-guide { text-align: center; margin-top: 1.1rem; }
-  .empty-guide h2 { font-size: 1.4rem; font-weight: 900; }
-  .empty-guide p { color: var(--text-secondary); font-size: 0.86rem; margin-top: 0.1rem; }
-  .empty-guide .chips { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin-top: 0.7rem; }
-  body[data-state="done"] .empty-guide { display: none; }
-
-  /* ── 4분면 보드: 축 트랙 없이 전폭 2×2 — 상하 컴포넌트와 정렬 ── */
+  /* ── 2패널: 좌 입력 / 우 4분면 (7/10 회의 합의 P0 #3) ── */
   #board { margin-top: 0.9rem; }
-  .matrix-wrap { position: relative; }
+  .panes {
+    display: grid; grid-template-columns: minmax(0, 22rem) minmax(0, 1fr);
+    gap: 1rem; align-items: start;
+  }
+  .pane-l { display: flex; flex-direction: column; gap: 0.6rem; }
+  .pane-r { min-width: 0; }
+
+  .ask { font-size: 1.05rem; font-weight: 900; letter-spacing: -0.01em; }
+  .ask-sub { font-size: 0.76rem; color: var(--text-secondary); margin-top: -0.35rem; }
+  .chips { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+  .acts { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; }
+
+  /* ── 사각지대 게이지: 이 도구의 주장을 숫자 하나로 ── */
+  #gauge {
+    background: var(--surface-1); border: 2px solid var(--line); box-shadow: 4px 4px 0 var(--shadow);
+    padding: 0.75rem 0.85rem; text-align: center;
+  }
+  #gauge[hidden] { display: none; }
+  #gauge .big { font-size: 2.6rem; font-weight: 900; line-height: 1; font-variant-numeric: tabular-nums; }
+  #gauge .big.hi { color: var(--warn); } #gauge .big.mid { color: var(--q-uk); } #gauge .big.lo { color: var(--ok); }
+  #gauge .cap { font-size: 0.7rem; font-weight: 700; color: var(--text-secondary); margin-top: 0.2rem; }
+  #gauge .note { font-size: 0.7rem; color: var(--muted); margin-top: 0.5rem; text-align: left; }
+
   .matrix { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 5px; }
   .axis-note { font-size: 0.72rem; color: var(--muted); text-align: center; margin-top: 0.4rem; }
 
@@ -131,14 +145,14 @@
   }
   .quad p.desc { font-size: 0.7rem; color: var(--muted); margin: 0.05rem 0 0.45rem; }
   .quad .risk { font-weight: 800; color: var(--text-secondary); }
+  /* 내부 스크롤 없음 — 항목 수만큼 늘어난다. 항목이 많으면 페이지가 스크롤된다. */
   ul.items {
-    list-style: none; padding: 0; display: flex; flex-direction: column; gap: 0.35rem;
-    max-height: 12rem; overflow-y: auto;
+    list-style: none; padding: 0; display: flex; flex-direction: column; gap: 0.3rem;
   }
   ul.items li {
     font-size: 0.78rem; background: var(--page);
     border: 1.5px solid var(--line); border-left: 4px solid var(--qc);
-    padding: 0.35rem 0.5rem;
+    padding: 0.3rem 0.45rem;
   }
   ul.items li .pattern { display: inline-block; font-size: 0.66rem; font-weight: 800; color: var(--qc); margin-top: 0.05rem; }
   ul.items li .note { display: block; font-size: 0.7rem; color: var(--text-secondary); }
@@ -155,29 +169,23 @@
   .bar-legend { display: flex; gap: 0.85rem; flex-wrap: wrap; font-size: 0.7rem; color: var(--text-secondary); margin-top: 0.35rem; }
   .bar-legend i { display: inline-block; width: 10px; height: 10px; margin-right: 4px; vertical-align: -1px; border: 1px solid var(--line); }
 
-  /* ── 하단 고정 입력 바 ── */
-  #dock {
-    position: fixed; left: 0; right: 0; bottom: 0; z-index: 20;
-    background: var(--page); border-top: 3px solid var(--line);
-    padding: 0.45rem 1.25rem 0.5rem;
-  }
-  .dock-inner { max-width: 960px; margin: 0 auto; }
-  #status { font-size: 0.78rem; margin-bottom: 0.3rem; font-weight: 600; }
+  /* ── 입력: 좌측 패널 안, 고정 아님 ── */
+  #status { font-size: 0.78rem; font-weight: 600; }
   #status.busy { color: var(--text-secondary); }
   #status.warn { color: var(--warn); }
   #status.ok { color: var(--ok); }
   #status .spin { display: inline-block; animation: spin 1s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
-  .dock-row { display: flex; gap: 0.5rem; align-items: flex-end; }
+  @media (prefers-reduced-motion: reduce) { #status .spin { animation: none; } }
   #task {
-    flex: 1 1 auto; resize: none; overflow-y: auto;
-    font: inherit; font-size: 0.9rem; line-height: 1.45;
+    width: 100%; resize: vertical;
+    font: inherit; font-size: 0.88rem; line-height: 1.45;
     color: var(--text-primary); background: var(--surface-1);
-    border: 2px solid var(--line); padding: 0.5rem 0.7rem;
-    min-height: 2.55rem; max-height: 8.5rem;
+    border: 2px solid var(--line); padding: 0.55rem 0.7rem;
+    min-height: 8rem;
   }
   #task:focus { outline: 3px solid var(--q-kk); outline-offset: 1px; }
-  .dock-tip { font-size: 0.64rem; color: var(--muted); margin-top: 0.22rem; }
+  .dock-tip { font-size: 0.64rem; color: var(--muted); }
   .dock-tip a { color: inherit; font-weight: 700; }
 
   /* ── 수동 모드 공용 컨트롤 ── */
@@ -199,10 +207,14 @@
   .error { color: var(--warn); font-size: 0.82rem; }
   details.schema > summary { font-size: 0.75rem; color: var(--muted); cursor: pointer; }
 
+  @media (max-width: 900px) {
+    .panes { grid-template-columns: minmax(0, 1fr); }
+  }
   @media (max-width: 640px) {
     .quad { padding: 0.5rem; min-height: 5.5rem; }
     header .cfg { margin-left: 0; }
     .axtag { display: none; }
+    .matrix { grid-template-columns: minmax(0, 1fr); }
   }
 
   /* ── 변형별 ── */
@@ -296,61 +308,35 @@
 </header>
 
 <main>
-  <!-- 빈 상태: 중앙 안내 + 예시 칩 -->
-  <div class="empty-guide" id="emptyGuide">
-    <h2>무엇을 AI에게 시키려고 하나요?</h2>
-    <p>아래 입력창에 평소처럼 작업을 설명하면, 당신의 언노운을 네 사분면으로 진단합니다.</p>
-    <div class="chips">
-      <button class="chip secondary small" data-fill="우리 서비스에 소셜 로그인을 붙이려고 해. 인증은 처음이라 OAuth가 뭔지도 잘 몰라. 기존 코드베이스는 Next.js인데 auth 모듈은 한 번도 안 열어봤어.">🔐 소셜 로그인 붙이기</button>
-      <button class="chip secondary small" data-fill="유튜브 영상을 요약해주는 크롬 확장프로그램을 졸업작품으로 만들려고 해. 자바스크립트는 좀 하는데 확장프로그램 개발은 처음이야.">🧩 크롬 확장 만들기</button>
-      <button class="chip secondary small" data-fill="공모전 제안서 초안을 AI에게 맡기려고 해. 주제는 정했는데 심사 기준표는 아직 제대로 안 읽어봤어.">📄 제안서 초안 맡기기</button>
-      <button class="chip small" data-demo>▶ 예시 결과 미리보기</button>
-    </div>
-  </div>
+  <section id="board" aria-label="언노운 나침반">
+   <div class="panes">
 
-  <!-- 4분면 나침반 (전폭 2×2 — 상하 컴포넌트와 정렬) -->
-  <section id="board" aria-label="4분면 나침반">
-    <div class="board-head">
-      <p class="axis-note">가로축: 그 지식을 안다/모른다 · 세로축: 그 사실을 스스로 인식하는가 — 인식 못함(아래 행)이 사각지대</p>
-      <div class="minimap" aria-hidden="true">
-        <span class="mm-top"><b>안다</b><b>모른다</b></span>
-        <span class="mm-side"><b>인식함</b><b>인식 못함</b></span>
-        <span class="mm-grid"><i style="background:var(--q-kk)"></i><i style="background:var(--q-ku)"></i><i style="background:var(--q-uk)"></i><i style="background:var(--q-uu)"></i></span>
+    <!-- 좌: 입력 패널 -->
+    <div class="pane-l">
+      <h2 class="ask">무엇을 AI에게 시키려고 하나요?</h2>
+      <p class="ask-sub">평소처럼 작업을 설명하면, 당신의 언노운을 네 사분면으로 진단합니다.</p>
+      <textarea id="task" placeholder="평소처럼, AI에게 시키려는 작업을 설명하세요… (진단 후 이 글을 고쳐 다시 보내면 재진단)"></textarea>
+      <div class="chips">
+        <button class="chip secondary small" data-fill="우리 서비스에 소셜 로그인을 붙이려고 해. 인증은 처음이라 OAuth가 뭔지도 잘 몰라. 기존 코드베이스는 Next.js인데 auth 모듈은 한 번도 안 열어봤어.">🔐 소셜 로그인 붙이기</button>
+        <button class="chip secondary small" data-fill="유튜브 영상을 요약해주는 크롬 확장프로그램을 졸업작품으로 만들려고 해. 자바스크립트는 좀 하는데 확장프로그램 개발은 처음이야.">🧩 크롬 확장 만들기</button>
+        <button class="chip secondary small" data-fill="공모전 제안서 초안을 AI에게 맡기려고 해. 주제는 정했는데 심사 기준표는 아직 제대로 안 읽어봤어.">📄 제안서 초안 맡기기</button>
       </div>
-    </div>
-    <div class="matrix-wrap">
-
-      <div class="matrix">
-        <div class="quad" id="q-KK" style="--qc: var(--q-kk)">
-          <h3>아는 것을 안다 <span class="count" id="c-KK">0</span></h3>
-          <p class="desc">프롬프트에 이미 적어 전달하는 것들 · 위험도 <span class="risk">낮음</span></p>
-          <ul class="items" id="l-KK"><li class="empty">진단 전</li></ul>
-        </div>
-        <div class="quad" id="q-KU" style="--qc: var(--q-ku)">
-          <h3>모른다는 걸 안다 <span class="count" id="c-KU">0</span></h3>
-          <p class="desc">답은 없지만 정해야 함은 인식 · 위험도 <span class="risk">중간</span></p>
-          <ul class="items" id="l-KU"><li class="empty">진단 전</li></ul>
-        </div>
-        <div class="quad" id="q-UK" style="--qc: var(--q-uk)">
-          <h3>안다는 걸 모른다 <span class="count" id="c-UK">0</span></h3>
-          <p class="desc">당연해서 안 적지만, 결과를 보면 “이게 아닌데” · 위험도 <span class="risk">높음</span></p>
-          <ul class="items" id="l-UK"><li class="empty">진단 전</li></ul>
-        </div>
-        <div class="quad" id="q-UU" style="--qc: var(--q-uu)">
-          <h3>모른다는 것도 모른다 <span class="count" id="c-UU">0</span></h3>
-          <p class="desc">고려한 적 없는 영역, 기준 자체를 모름 · 위험도 <span class="risk">최고</span></p>
-          <ul class="items" id="l-UU"><li class="empty">진단 전</li></ul>
-        </div>
+      <div class="acts">
+        <button id="sendBtn">진단 →</button>
+        <button class="secondary small" data-demo>▶ 예시 결과</button>
       </div>
-    </div>
+      <p id="status" hidden></p>
+      <p class="dock-tip">Enter 전송 · Shift+Enter 줄바꿈 · 대화는 누적되지 않습니다 — 보낼 때마다 새로 진단하고 나침반을 다시 그립니다</p>
 
-    <div class="summary" id="summary" hidden></div>
-    <details class="inline" id="manualBox">
+      <!-- 사각지대 게이지: 재진단으로 낮추는 것이 목표라는 걸 숫자로 -->
+      <div id="gauge" hidden></div>
+
+      <details class="inline" id="manualBox">
       <summary>API 키 없이 쓰기 — 수동 모드 (프롬프트 복사 → JSON 붙여넣기)</summary>
       <div class="inner">
 
       <div class="manual-ui">
-        <p class="help">하단 입력창에 작업을 적고 <strong>진단 프롬프트 생성</strong> → 복사해 ChatGPT·Claude·Gemini 어디든 붙여넣기 → AI가 돌려준 JSON을 아래에 붙여넣으면 나침반이 갱신됩니다. 프롬프트 자체가 도구라, 진단 로직 전체를 사람이 읽고 배울 수 있습니다.</p>
+        <p class="help">위 입력창에 작업을 적고 <strong>진단 프롬프트 생성</strong> → 복사해 ChatGPT·Claude·Gemini 어디든 붙여넣기 → AI가 돌려준 JSON을 아래에 붙여넣으면 나침반이 갱신됩니다. 프롬프트 자체가 도구라, 진단 로직 전체를 사람이 읽고 배울 수 있습니다.</p>
         <div class="mrow">
           <button id="genBtn" class="secondary small">진단 프롬프트 생성</button>
           <button id="copyBtn" class="secondary small" disabled>복사</button>
@@ -369,14 +355,54 @@
         <pre class="prompt-box">{
   "items": [
     { "quadrant": "KK | KU | UK | UU",
-      "label": "항목 한 줄",
+      "label": "동사형 한 문장",
       "note": "왜 이 사분면인지 (선택)",
       "pattern": "권장 패턴 이름" }
   ]
 }</pre>
       </details>
       </div>
-    </details>
+      </details>
+    </div>
+
+    <!-- 우: 4분면 나침반 -->
+    <div class="pane-r">
+      <div class="board-head">
+        <p class="axis-note">가로축: 내가 그 지식·답을 갖고 있는가 · 세로축: 그것이 정하거나 전달할 대상임을 인식하는가 — 인식 못함(아래 행)이 사각지대</p>
+        <div class="minimap" aria-hidden="true">
+          <span class="mm-top"><b>갖고 있다</b><b>없다</b></span>
+          <span class="mm-side"><b>인식함</b><b>인식 못함</b></span>
+          <span class="mm-grid"><i style="background:var(--q-kk)"></i><i style="background:var(--q-ku)"></i><i style="background:var(--q-uk)"></i><i style="background:var(--q-uu)"></i></span>
+        </div>
+      </div>
+
+      <div class="matrix">
+        <div class="quad" id="q-KK" style="--qc: var(--q-kk)">
+          <h3>아는 것을 안다 <span class="count" id="c-KK">0</span></h3>
+          <p class="desc">이미 인식하고 프롬프트에 적은 것 · 위험도 <span class="risk">낮음</span></p>
+          <ul class="items" id="l-KK"><li class="empty">진단 전</li></ul>
+        </div>
+        <div class="quad" id="q-KU" style="--qc: var(--q-ku)">
+          <h3>모른다는 걸 안다 <span class="count" id="c-KU">0</span></h3>
+          <p class="desc">답은 없지만 정해야 함은 인식 · 위험도 <span class="risk">중간</span></p>
+          <ul class="items" id="l-KU"><li class="empty">진단 전</li></ul>
+        </div>
+        <div class="quad" id="q-UK" style="--qc: var(--q-uk)">
+          <h3>안다는 걸 모른다 <span class="count" id="c-UK">0</span></h3>
+          <p class="desc">당연해서 안 적지만, 결과를 보면 “이게 아닌데” · 위험도 <span class="risk">높음</span></p>
+          <ul class="items" id="l-UK"><li class="empty">진단 전</li></ul>
+        </div>
+        <div class="quad" id="q-UU" style="--qc: var(--q-uu)">
+          <h3>모른다는 것도 모른다 <span class="count" id="c-UU">0</span></h3>
+          <p class="desc">고려한 적 없는 영역, 기준 자체를 모름 · 위험도 <span class="risk">최고</span></p>
+          <ul class="items" id="l-UU"><li class="empty">진단 전</li></ul>
+        </div>
+      </div>
+
+      <div class="summary" id="summary" hidden></div>
+    </div>
+
+   </div>
 
     <!-- 진단 기록: 진단할 때마다 이 브라우저에만 누적 저장 → 사각지대 추이 -->
     <details class="inline" id="logBox">
@@ -403,21 +429,6 @@
   </section>
 </main>
 
-
-
-<!-- 하단 고정 입력 바 -->
-<div id="dock">
-  <div class="dock-inner">
-
-    <p id="status" hidden></p>
-    <div class="dock-row">
-      <textarea id="task" rows="1" placeholder="평소처럼, AI에게 시키려는 작업을 설명하세요… (진단 후 이 글을 고쳐 다시 보내면 재진단)"></textarea>
-      <button id="sendBtn">진단 →</button>
-    </div>
-    <p class="dock-tip">Enter 전송 · Shift+Enter 줄바꿈 · 대화는 누적되지 않습니다 — 보낼 때마다 새로 진단하고 나침반을 다시 그립니다</p>
-  </div>
-</div>
-
 <script>
 "use strict";
 const $ = (id) => document.getElementById(id);
@@ -435,22 +446,39 @@ ${task}
 </작업>
 
 Thariq(Anthropic)의 "A Field Guide to Fable: Finding Your Unknowns" 프레임에 따라, 이 작업에 숨어 있는 항목들을 네 사분면으로 분류해줘.
+가로축은 "내가 그 지식·답을 갖고 있는가", 세로축은 "그것이 이 작업에서 정하거나 전달할 대상임을 내가 인식하는가"다.
 
-- KK (아는 것을 안다): 내가 이미 명시했거나 명백히 알고 있는 요구사항
-- KU (모른다는 걸 안다): 내가 아직 못 정했지만 정해야 한다고 인식할 법한 결정
-- UK (안다는 걸 모른다): 나에게 너무 당연해서 안 적었을 가능성이 큰 암묵적 기대 — 결과물을 보면 "이게 아닌데" 할 것들
-- UU (모른다는 것도 모른다): 내가 고려조차 못 했을 영역 — 이 분야에서 좋고 나쁨을 가르는 기준, 흔한 함정, 내가 존재 자체를 모를 선택지
+- KK (아는 것을 안다): 작업 설명에 이미 명시됐고 관련 있는 것.
+  판정: 작업 설명에서 직접 인용할 수 있는가?
+- KU (모른다는 걸 안다): 답은 없지만 "정해야 할 결정"임은 내가 인식할 만한 것.
+  판정: 나에게 물으면 "아 그건 아직 안 정했어요"라고 답할 것인가?
+- UK (안다는 걸 모른다): 내가 답을 갖고 있으나, 너무 당연해서 전달 대상임을 인식조차 못 한 기대.
+  기전: 암묵지(Polanyi 1966) + 지식의 저주(Camerer·Loewenstein·Weber 1989) — 아는 사람은 남이 그걸 모른다는 걸 상상하지 못한다.
+  판정: 결과물을 본 뒤에야 "이건 당연한 거 아니야?"라고 할 것인가?
+  주의: 내가 갖고 있지 않은 지식은 UK가 아니라 UU다.
+- UU (모른다는 것도 모른다): 나도, 이 작업 설명만 받은 AI도 접근할 수 없는 영역.
+  이 분야에서 좋고 나쁨을 가르는 기준, 흔한 함정, 존재 자체를 몰라 선택지에 오르지 않은 대안.
+  판정: 이 분야 숙련자만 아는가? (Sutcliffe & Sawyer 2013이 요구사항 도출에서 가장 어렵다고 지목한 칸)
 
 규칙:
 1. UK와 UU를 가장 공들여 추측해줘. 이 작업 설명에 "빠져 있는 것"이 단서다.
 2. 각 항목에 다음 8가지 패턴 중 가장 알맞은 대응 패턴을 하나 붙여줘:
    블라인드스팟 패스 / 브레인스토밍·프로토타입 / AI 역질문 / 레퍼런스 / 구현 계획서 / 구현 노트 / 피치 문서 / 퀴즈
-3. 사분면당 2~4개, 전체 8~14개.
-4. 답변은 아래 JSON 하나만, 코드 블록으로 출력해줘. 다른 말은 하지 마.
+3. 개수는 이 작업에 실제로 존재하는 만큼만. 사분면당 할당량은 없다.
+   - 채우려고 항목을 지어내지 마라. 억지 항목은 진단을 오염시킨다.
+   - 어느 사분면이 실제로 비어 있으면 비운 채로 둬라.
+   - 작업 설명이 짧고 모호할수록 UK·UU가 많아지고, 구체적일수록 KK가 많아지는 게 정상이다.
+     이 비대칭 자체가 진단 결과다.
+4. label은 명사구가 아니라 동사형 한 문장으로 쓰고, 사분면별로 아래 어미를 지켜라:
+   - KK: "…이미 명시했습니다"
+   - KU: "…정하세요" / "…결정하세요"
+   - UK: "…프롬프트에 적으세요"
+   - UU: "…확인하세요" / "…조사하세요"
+5. 답변은 아래 JSON 하나만, 코드 블록으로 출력해줘. 다른 말은 하지 마.
 
 {
   "items": [
-    { "quadrant": "KK|KU|UK|UU", "label": "항목 한 줄", "note": "왜 이 사분면인지 한 줄", "pattern": "패턴 이름" }
+    { "quadrant": "KK|KU|UK|UU", "label": "동사형 한 문장", "note": "왜 이 사분면인지 한 줄", "pattern": "패턴 이름" }
   ]
 }`;
 }
@@ -560,6 +588,12 @@ function render(data) {
      <div class="bar" role="img" aria-label="사분면별 분포">${seg}</div>
      <div class="bar-legend">${legend}</div>`;
   $("summary").hidden = false;
+  $("gauge").innerHTML =
+    `<div class="big ${pctSev(pct)}">${pct}%</div>
+     <div class="cap">인식 사각지대 (UK + UU)</div>
+     <div class="bar" role="img" aria-label="사분면별 분포">${seg}</div>
+     <p class="note">전체 ${total}개 중 ${blind}개. 작업 설명을 고쳐 다시 진단해 이 수치를 낮추는 것이 목표입니다.</p>`;
+  $("gauge").hidden = false;
   document.body.dataset.state = "done";
   const counts = {};
   for (const q of QUADS) counts[q] = buckets[q].length;
@@ -665,11 +699,6 @@ $("themeBtn").addEventListener("click", () => {
 applyTheme();
 
 const taskEl = $("task");
-function growTask() {
-  taskEl.style.height = "auto";
-  taskEl.style.height = Math.min(taskEl.scrollHeight + 2, 136) + "px";
-}
-taskEl.addEventListener("input", growTask);
 taskEl.addEventListener("keydown", (e) => {
   if (e.key === "Enter" && !e.shiftKey && !e.isComposing) {
     e.preventDefault();
@@ -752,19 +781,37 @@ function prepareManual(task) {
   $("promptBox").hidden = false;
   $("copyBtn").disabled = false;
 }
+/* 작업 설명이 비면 조용히 focus만 하고 끝나 "아무 일도 안 일어난다"고 보였다.
+   이유를 눈에 보이게 알린다. */
 $("genBtn").addEventListener("click", () => {
   const task = taskEl.value.trim();
-  if (!task) { taskEl.focus(); return; }
+  if (!task) {
+    $("copyFlash").className = "error";
+    $("copyFlash").textContent = "작업 설명을 먼저 입력하세요.";
+    taskEl.focus();
+    taskEl.scrollIntoView({ behavior: "smooth", block: "center" });
+    return;
+  }
   prepareManual(task);
+  $("copyFlash").className = "flash";
+  $("copyFlash").textContent = "생성됨 ✓ 복사해 아무 AI에나 붙여넣으세요";
 });
+/* 클립보드가 막힌 환경에서도 복사할 수 있도록, 실패 시 프롬프트를 선택해 준다. */
 $("copyBtn").addEventListener("click", async () => {
   try {
     await navigator.clipboard.writeText($("promptBox").textContent);
+    $("copyFlash").className = "flash";
     $("copyFlash").textContent = "복사됨 ✓";
   } catch {
-    $("copyFlash").textContent = "복사 실패 — 직접 선택해 복사하세요";
+    const r = document.createRange();
+    r.selectNodeContents($("promptBox"));
+    const s = getSelection();
+    s.removeAllRanges();
+    s.addRange(r);
+    $("copyFlash").className = "error";
+    $("copyFlash").textContent = "복사 권한이 없어 프롬프트를 선택해 뒀습니다 — ⌘C(Ctrl+C)를 누르세요.";
   }
-  setTimeout(() => { $("copyFlash").textContent = ""; }, 2500);
+  setTimeout(() => { $("copyFlash").textContent = ""; }, 4000);
 });
 $("vizBtn").addEventListener("click", () => {
   $("jsonErr").hidden = true;
@@ -782,21 +829,27 @@ $("vizBtn").addEventListener("click", () => {
 function openManualUI() { $("manualBox").open = true; }
 
 const DEMO_TASK = "우리 서비스에 소셜 로그인을 붙이려고 해. 인증은 처음이라 OAuth가 뭔지도 잘 몰라. 기존 코드베이스는 Next.js인데 auth 모듈은 한 번도 안 열어봤어.";
+/* 사분면당 할당량이 없으므로 분포는 2/2/3/6으로 비대칭 — 인증 초심자가 모호하게 적었을 때의
+   자연스러운 모양이다. 사각지대 9/13 = 69%로, 옛 쿼터(2~4개/사분면)가 가두던 33~67% 밖의 값. */
 const DEMO_DATA = {
   items: [
-    { quadrant: "KK", label: "Next.js에 소셜 로그인 추가", note: "명시된 목표", pattern: "구현 계획서" },
-    { quadrant: "KK", label: "기존 코드베이스는 Next.js", note: "명시된 제약", pattern: "레퍼런스" },
-    { quadrant: "KU", label: "어떤 소셜 제공자를 지원할지", note: "정해야 함을 본인도 인식", pattern: "AI 역질문" },
-    { quadrant: "KU", label: "세션 유지 방식(JWT vs 세션)", note: "미결정이라고 언급", pattern: "AI 역질문" },
-    { quadrant: "UK", label: "기존 회원과 소셜 계정의 병합 규칙", note: "당연히 합쳐진다고 가정했을 것", pattern: "브레인스토밍·프로토타입" },
-    { quadrant: "UK", label: "로그인 실패/거부 시 UX", note: "성공 경로만 상상했을 가능성", pattern: "브레인스토밍·프로토타입" },
-    { quadrant: "UU", label: "OAuth 리다이렉트 URI 검증·CSRF 등 보안 함정", note: "인증 초심자가 존재를 모르는 영역", pattern: "블라인드스팟 패스" },
-    { quadrant: "UU", label: "제공자별 이메일 미제공 케이스", note: "좋은 구현의 기준 자체를 모름", pattern: "블라인드스팟 패스" }
+    { quadrant: "KK", label: "Next.js 코드베이스에 소셜 로그인을 붙인다고 이미 명시했습니다", note: "작업 설명에서 그대로 인용됩니다", pattern: "구현 계획서" },
+    { quadrant: "KK", label: "인증 구현 경험이 없다고 이미 밝혔습니다", note: "본인이 직접 적은 제약입니다", pattern: "레퍼런스" },
+    { quadrant: "KU", label: "구글·카카오·애플 중 어떤 제공자를 지원할지 정하세요", note: "물어보면 “아직 안 정했다”고 답할 결정입니다", pattern: "AI 역질문" },
+    { quadrant: "KU", label: "세션을 JWT로 유지할지 서버 세션으로 유지할지 정하세요", note: "선택지가 있다는 건 알지만 고를 기준이 없습니다", pattern: "AI 역질문" },
+    { quadrant: "UK", label: "기존 이메일 회원과 소셜 계정을 어떤 규칙으로 병합할지 프롬프트에 적으세요", note: "당연히 합쳐진다고 가정해 적지 않았을 항목입니다", pattern: "브레인스토밍·프로토타입" },
+    { quadrant: "UK", label: "로그인이 실패·거부·취소됐을 때 무엇을 보여줄지 프롬프트에 적으세요", note: "성공 경로만 상상했을 가능성이 큽니다", pattern: "브레인스토밍·프로토타입" },
+    { quadrant: "UK", label: "이 서비스가 지금 사용자를 무엇으로 식별하는지 프롬프트에 적으세요", note: "본인은 아는 사실이지만 AI에게는 전달되지 않았습니다", pattern: "레퍼런스" },
+    { quadrant: "UU", label: "리다이렉트 URI 검증과 state 파라미터로 CSRF를 막아야 하는지 확인하세요", note: "인증 초심자가 존재 자체를 모르는 보안 함정입니다", pattern: "블라인드스팟 패스" },
+    { quadrant: "UU", label: "제공자가 이메일을 주지 않는 경우를 어떻게 처리할지 조사하세요", note: "좋은 구현의 기준 자체가 아직 없습니다", pattern: "블라인드스팟 패스" },
+    { quadrant: "UU", label: "토큰을 httpOnly 쿠키에 둘지 localStorage에 둘지 트레이드오프를 조사하세요", note: "이 분야 숙련자만 아는 선택 기준입니다", pattern: "레퍼런스" },
+    { quadrant: "UU", label: "카카오·애플의 앱 심사와 등록 절차가 일정에 미치는 영향을 확인하세요", note: "구현 밖의 제약이라 고려 대상에 오르지 않습니다", pattern: "블라인드스팟 패스" },
+    { quadrant: "UU", label: "직접 구현 대신 Auth.js 같은 기성 솔루션을 쓸지 조사하세요", note: "존재를 몰라 선택지에 오르지 않은 대안입니다", pattern: "레퍼런스" },
+    { quadrant: "UU", label: "auth 모듈이 이미 어떤 인증 흐름을 갖고 있는지 확인하세요", note: "열어본 적 없다면 무엇이 있는지조차 알 수 없습니다", pattern: "블라인드스팟 패스" }
   ]
 };
 function runDemo() {
   taskEl.value = DEMO_TASK;
-  growTask();
   const r = render(DEMO_DATA);
   $("jsonIn").value = JSON.stringify(DEMO_DATA, null, 2);
   setStatus("ok", `(예시) 진단 완료 — 전체 ${r.total}개 중 ${r.blind}개(${r.pct}%)가 인식 사각지대. 실제 진단은 입력을 고쳐 [진단 →]을 누르세요.`);
@@ -804,7 +857,6 @@ function runDemo() {
 document.querySelectorAll("[data-demo]").forEach(b => b.addEventListener("click", runDemo));
 document.querySelectorAll("[data-fill]").forEach(b => b.addEventListener("click", () => {
   taskEl.value = b.dataset.fill;
-  growTask();
   taskEl.focus();
 }));
 

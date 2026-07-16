@@ -44,6 +44,17 @@
 - [Rumsfeld Matrix — “There Are Unknown Unknowns”](https://en.wikipedia.org/wiki/There_are_unknown_unknowns) — `known knowns / known unknowns / unknown unknowns` 발언과 후대의 2×2 확장을 정리 / **Unknown Compass의 4분면 구조 출처**.
 - [Unknown Compass 데모](https://unknown-compass.vercel.app) — 프롬프팅 전후의 known/unknown을 4분면으로 회고하는 프로토타입 / **대응 방안**.
 
+### Unknown Compass 4분면 판정 기준의 학술 근거
+
+도구의 진단 프롬프트가 각 사분면을 어떤 기준으로 가르는지에 대한 근거. Kruger & Dunning(1999)·Flavell(1979)은 위 **원인 진단 ①·대응 방안** 항목에 이미 등재.
+
+- [Sutcliffe & Sawyer — *Requirements Elicitation: Towards the Unknown Unknowns* (2013)](https://doi.org/10.1109/RE.2013.6636709) — 요구사항을 `known knowns / known unknowns / unknown knowns / unknown unknowns`로 나누고 각각의 도출 난이도를 정리. 이해관계자(사용자)와 요구공학자(AI)라는 두 당사자 구조가 이 도구와 동일 / **KK·KU·UK·UU 판정 기준의 직접 출처**.
+- **Polanyi — *The Tacit Dimension* (1966)** — "우리는 말할 수 있는 것보다 많이 안다" — 언어화되지 않는 암묵지 / **UK(안다는 걸 모른다)의 기전**.
+- [Camerer, Loewenstein & Weber — *The Curse of Knowledge in Economic Settings* (1989)](https://doi.org/10.1086/261651) — 아는 사람이 남의 무지를 상상하지 못해 정보를 전달하지 못하는 편향 / **UK(안다는 걸 모른다)의 기전**.
+- **Luft & Ingham — *The Johari Window* (1955)** — 자기/타인 인식을 2×2로 가른 선행 모델 / **4분면 구조의 계보**.
+- [Buçinca, Malaya & Gajos — *To Trust or to Think* (CSCW 2021)](https://doi.org/10.1145/3449287) — 인지 강제 기능(cognitive forcing function)이 AI 과의존을 줄인다는 실험 / **도구 자체의 성격 근거(사용 패턴 속에서 메타인지를 강제)**.
+- [Gollwitzer & Sheeran — *Implementation Intentions and Goal Achievement* (2006)](https://doi.org/10.1016/S0065-2601(06)38002-1) — 94개 실험 메타분석에서 구체적 행동으로 진술된 의도가 목표 달성에 중간~큰 효과(d=.65) / **진단 항목을 명사구가 아닌 동사형으로 제시하는 근거**.
+
 ### 교육·학습
 
 - [AI가 대체할 수 없는 진짜 스승의 역할](https://www.youtube.com/live/aawqkjokPhU?si=QbXoOMfAlRXHT5b1) — 지식 전달 이후에도 남는 교수자의 역할을 검토하기 위한 영상 / **원인 진단·대응 방안**.
