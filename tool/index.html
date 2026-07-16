@@ -129,14 +129,7 @@
   #gauge .cap { font-size: 0.7rem; font-weight: 700; color: var(--text-secondary); margin-top: 0.2rem; }
   #gauge .note { font-size: 0.7rem; color: var(--muted); margin-top: 0.5rem; text-align: left; }
 
-  /* 축 트랙과 사분면은 같은 grid에 있어야 한다 — 행 라벨을 별도 컨테이너로 빼면
-     1fr 1fr로 균등 분할돼, 높이가 제각각인 실제 행과 어긋난다. */
-  .matrix {
-    display: grid; grid-template-columns: auto minmax(0,1fr) minmax(0,1fr); gap: 5px;
-  }
-  .ax-c, .ax-r { font-size: 0.68rem; font-weight: 800; color: var(--muted); letter-spacing: 0.02em; }
-  .ax-c { text-align: center; align-self: end; padding-bottom: 0.15rem; }
-  .ax-r { display: flex; align-items: center; justify-content: flex-end; text-align: right; line-height: 1.25; }
+  .matrix { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 5px; }
   .axis-note { font-size: 0.72rem; color: var(--muted); text-align: center; margin-top: 0.4rem; }
 
   .quad {
@@ -217,18 +210,28 @@
   @media (max-width: 900px) {
     .panes { grid-template-columns: minmax(0, 1fr); }
   }
-  /* 1열로 접히면 2D 기하가 사라져 축 트랙이 거짓말이 된다 — 숨기고,
-     사분면 이름("아는 것을 안다" = 갖고 있다 + 인식함)이 축을 대신 말한다. */
   @media (max-width: 640px) {
     .quad { padding: 0.5rem; min-height: 5.5rem; }
     header .cfg { margin-left: 0; }
     .matrix { grid-template-columns: minmax(0, 1fr); }
-    .ax-c, .ax-r { display: none; }
   }
 
   /* ── 변형별 ── */
-  .board-head { margin-bottom: 0.45rem; }
-  .board-head .axis-note { margin: 0; text-align: left; }
+  .board-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 1rem; margin-bottom: 0.45rem; }
+  .board-head .axis-note { margin: 0; text-align: left; flex: 1; }
+  .minimap { --mm-cell: 1.25rem; --mm-gap: 3px; display: grid;
+    grid-template-columns: max-content max-content; grid-template-areas: ". top" "side grid";
+    column-gap: 0.35rem; row-gap: var(--mm-gap); font-size: 0.56rem; font-weight: 800;
+    color: var(--muted); flex: 0 0 auto; }
+  .minimap .mm-top { grid-area: top; display: grid;
+    grid-template-columns: repeat(2, var(--mm-cell)); gap: var(--mm-gap); text-align: center; }
+  .minimap .mm-top b { white-space: nowrap; }
+  .minimap .mm-side { grid-area: side; display: grid;
+    grid-template-rows: repeat(2, var(--mm-cell)); gap: var(--mm-gap); align-items: center; text-align: right; }
+  .minimap .mm-grid { grid-area: grid; display: grid;
+    grid-template: repeat(2, var(--mm-cell)) / repeat(2, var(--mm-cell)); gap: var(--mm-gap); }
+  .minimap .mm-grid i { width: 100%; height: 100%; box-sizing: border-box;
+    border: 1.5px solid var(--line); display: block; }
   details.inline { margin-top: 0.7rem; }
   details.inline > summary { cursor: pointer; font-size: 0.78rem; font-weight: 700; color: var(--muted);
     text-decoration: underline; text-underline-offset: 3px; width: fit-content; }
@@ -372,16 +375,14 @@
     <div class="pane-r">
       <div class="board-head">
         <p class="axis-note">가로축: 내가 그 지식·답을 갖고 있는가 · 세로축: 그것이 정하거나 전달할 대상임을 인식하는가 — 인식 못함(아래 행)이 사각지대</p>
+        <div class="minimap" aria-hidden="true">
+          <span class="mm-top"><b>있다</b><b>없다</b></span>
+          <span class="mm-side"><b>인식함</b><b>인식 못함</b></span>
+          <span class="mm-grid"><i style="background:var(--q-kk)"></i><i style="background:var(--q-ku)"></i><i style="background:var(--q-uk)"></i><i style="background:var(--q-uu)"></i></span>
+        </div>
       </div>
 
-      <!-- 축 라벨은 사분면과 같은 grid에 놓여 실제 열·행을 가리킨다.
-           시각 라벨은 aria-hidden — 축 정보는 위 axis-note 문장과 사분면 제목이 전달한다. -->
       <div class="matrix">
-        <span aria-hidden="true"></span>
-        <span class="ax-c" aria-hidden="true">갖고 있다</span>
-        <span class="ax-c" aria-hidden="true">없다</span>
-
-        <span class="ax-r" aria-hidden="true">인식함</span>
         <div class="quad" id="q-KK" style="--qc: var(--q-kk)">
           <h3>아는 것을 안다 <span class="count" id="c-KK">0</span></h3>
           <p class="desc">이미 인식하고 프롬프트에 적은 것 · 위험도 <span class="risk">낮음</span></p>
@@ -392,7 +393,6 @@
           <p class="desc">답은 없지만 정해야 함은 인식 · 위험도 <span class="risk">중간</span></p>
           <ul class="items" id="l-KU"><li class="empty">진단 전</li></ul>
         </div>
-        <span class="ax-r" aria-hidden="true">인식<br>못함</span>
         <div class="quad" id="q-UK" style="--qc: var(--q-uk)">
           <h3>안다는 걸 모른다 <span class="count" id="c-UK">0</span></h3>
           <p class="desc">당연해서 안 적지만, 결과를 보면 “이게 아닌데” · 위험도 <span class="risk">높음</span></p>
